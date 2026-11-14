@@ -280,7 +280,7 @@ export interface FeedbackResult {
 - 同一 namespace 重复 id -> DUPLICATE_ID；v0.1 不做“相同 payload 幂等返回”。
 - status 默认 candidate；只允许 candidate/active；working 必须提供 expiresAt。
 - origin 默认 direct；title 默认空串；content 必填，1..100000 字符（默认上限，可配置）。
-- tags 最多 32 个，每个 1..64；存为空格拼接的 tags_text，DTO 解析回数组。
+- tags 最多 32 个，每个 1..64；存为 JSON 数组字符串的 tags_text，DTO 解析回数组。
 - confidence 为 0..1 或 null；与 confirmedAt 独立。
 - metadata 必须可 JSON 序列化，序列化后 <= 16KB。
 - expiresAt 为 ISO UTC 或 null；必须晚于 createdAt。

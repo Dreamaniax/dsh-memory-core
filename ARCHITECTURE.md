@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 架构设计
 
-- 状态：Phase 1 收口；Sprint 1 storage foundation 已实现（docs/SPRINT1_REPORT.md）；Sprint 2 API 待实施
+- 状态：Phase 1 收口；Sprint 1 storage foundation、Sprint 2 CRUD/provenance 已实现（docs/SPRINT1_REPORT.md、docs/SPRINT2_REPORT.md）；Sprint 3 search/feedback 待实施
 - 依据：docs/PHASE0_INVESTIGATION.md
 - 范围：Local-first、进程内、SQLite + FTS5、无 LLM/网络依赖
 
@@ -386,7 +386,7 @@ dsh-memory-core/
 - FTS：显式 fts_rowid，避免 VACUUM 破坏 external content。
 - 反馈：request_hash 幂等；correct 必须 patch；working 必须有 expiresAt。
 
-仍需你确认的产品取舍（不阻塞 Sprint 1 的 SQLite foundation）：
+仍需你确认的产品取舍（不阻塞 Sprint 2；Sprint 3/4 可继续）：
 
 1. 备份保留 3 份、是否加密。
 2. 归档/降权的默认阈值（v0.2，不在 v0.1）。

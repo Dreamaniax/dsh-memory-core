@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 实施计划与验收
 
-- 状态：Phase 0/1 待批准；Sprint 1 未开始
+- 状态：Phase 0/1 已收口；Sprint 1 与 Sprint 2 已完成；Sprint 3（search/feedback）待实施
 - 原则：小步可验证；每阶段有验收命令、证据、回滚点；不修改无关现有插件
 - 依据：docs/PHASE0_INVESTIGATION.md、ARCHITECTURE.md、DATABASE_SCHEMA.md、API_REFERENCE.md
 
@@ -82,7 +82,7 @@ node --test tests/integration/database.test.mjs
 7. memory-api.ts：公共门面；所有输入校验；错误映射。
 8. 测试：
    - CRUD 全路径；返回类型稳定。
-   - namespace 隔离；跨 namespace 读取/更新/删除/purge 返回 NOT_FOUND。
+   - namespace 隔离；跨 namespace getMemory 返回 null（不泄露存在性），update/delete/purge 返回 NOT_FOUND。
    - 版本冲突；expectedVersion 缺失/错误。
    - 重复 ID（调用方提供 id）在同一 namespace -> DUPLICATE_ID；不同 namespace 可复用。
    - updateMemory 不允许改 status/confirmedAt/origin；状态只走 feedback/delete/purge。
@@ -295,6 +295,7 @@ npm pack --dry-run
 - Phase 0 调查：完成（文档已落盘）。
 - Phase 1 架构/Schema/API：收口完成（ADR 0008/0009，契约一致）。
 - Sprint 1：**完成**。SqliteStore、迁移、001 Schema、备份、13 项测试通过；详见 docs/SPRINT1_REPORT.md。
-- 生产代码：仅 storage foundation；CRUD/search/feedback/Cordis 插件尚未开始。
-- 自动化测试：Sprint 1 的 13 项通过；核心覆盖率尚未全部达到 85%，Sprint 2/3 补齐。
-- 下一步：Sprint 2（contracts/validation/repositories/manager/API/来源）。
+- Sprint 2：**完成**。contracts/validation/errors、repositories、MemoryManager、MemoryApi、来源追踪、namespace 隔离、版本快照、软删除/purge；23 项集成测试通过；详见 docs/SPRINT2_REPORT.md。
+- 生产代码：CRUD + provenance 可用；search/feedback/Cordis 插件尚未开始。
+- 自动化测试：23 项通过；核心服务行/函数覆盖 >=80%；整体 lines 93.84%、functions 93.20%。
+- 下一步：Sprint 3（FTS/LIKE 搜索 + feedback，覆盖率提升到 85%）。

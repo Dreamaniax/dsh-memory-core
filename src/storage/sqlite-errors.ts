@@ -27,6 +27,12 @@ export function isSqliteBusy(error: unknown): boolean {
   return errcode === 5 || errcode === 6
 }
 
+export function isUniqueConstraint(error: unknown, table?: string): boolean {
+  const message = error instanceof Error ? error.message : String(error)
+  if (!/UNIQUE constraint failed/i.test(message)) return false
+  return table === undefined || message.includes(table)
+}
+
 export function translateStorageError(error: unknown, context: string): MemoryStorageError {
   if (error instanceof MemoryStorageError) return error
   const message = error instanceof Error ? error.message : String(error)

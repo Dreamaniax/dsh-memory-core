@@ -2,8 +2,8 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：Phase 0/1 契约已收口；Sprint 1（SQLite foundation）已实现并通过 13 项测试。
-> 当前可运行范围：SQLite Store、迁移、001 Schema、备份、健康检查；CRUD/search/feedback/Cordis 插件仍在 Sprint 2/3/4。
+> 状态：Phase 0/1 契约已收口；Sprint 1（SQLite foundation）与 Sprint 2（CRUD + provenance）已实现，23 项集成测试通过。
+> 当前可运行范围：SQLite Store、迁移、001 Schema、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪。search/feedback/Cordis 插件仍在 Sprint 3/4。
 
 ## 为什么
 
@@ -25,8 +25,9 @@ Memory Core 提供一个共享的进程内服务与可独立导入的库：
 - 状态：candidate / active / flagged / rejected / deleted；过期由 expires_at 计算。
 - 来源：direct / inferred / imported + sources 多对多。
 - 反馈：confirm / correct / reject / flag；request_id 幂等；版本历史。
-- API：createMemory、getMemory、listMemories、updateMemory、deleteMemory、searchMemories、addSource、getSources、submitFeedback、getFeedbackHistory。
-- 进程内 Cordis Service（memoryCore）+ Library 工厂。
+- API（Sprint 2 已实现）：createMemory、getMemory、listMemories、updateMemory、deleteMemory、addSource、getSources、getMemoryVersions、backupTo、healthCheck、close。
+- API（Sprint 3）：searchMemories、submitFeedback、getFeedbackHistory。
+- Library 工厂已可用；进程内 Cordis Service（memoryCore）在 Sprint 4 接线。
 
 明确不做：向量库、embedding、自动 LLM 抽取、自动 consolidation、多机同步、复杂用户画像、HTTP 服务。
 
@@ -58,6 +59,7 @@ $DSH_HOME/memory-core/memory.sqlite3
 - [容量与演进](docs/CAPACITY_AND_EVOLUTION.md)
 - [Phase 1 收口报告](docs/PHASE1_CLOSEOUT.md)
 - [Sprint 1 实施报告](docs/SPRINT1_REPORT.md)
+- [Sprint 2 实施报告](docs/SPRINT2_REPORT.md)
 - [实施计划与验收](IMPLEMENTATION_PLAN.md)
 - ADRs：
   - [0001 TypeScript ESM](docs/adr/0001-typescript-esm.md)
@@ -85,9 +87,29 @@ $DSH_HOME/memory-core/memory.sqlite3
 
 完整审批清单见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 第 10 节。
 
-## 计划中的用法（审批后实现）
+## 用法
 
-DSH 插件：
+Sprint 2 已可通过库工厂使用；Cordis 插件入口在 Sprint 4 接线。
+
+独立脚本/测试：
+
+~~~ts
+import { openMemoryCore } from 'dsh-memory-core'
+
+const core = await openMemoryCore({ path: '/tmp/memory.sqlite3' })
+const memory = await core.createMemory({
+  namespaceId: 'weekly-retro',
+  type: 'episodic',
+  status: 'active',
+  content: '2026-W46：周报采集被 npm 网络阻塞。',
+  sources: [{ type: 'plugin', externalRef: 'weekly-retro/run-1' }],
+})
+const page = await core.listMemories({ namespaceId: 'weekly-retro' })
+console.log(page.total, memory.id)
+await core.close()
+~~~
+
+DSH 插件（Sprint 4 接线后）：
 
 ~~~ts
 ctx.inject(['memoryCore'], (ctx) => {
@@ -96,24 +118,14 @@ ctx.inject(['memoryCore'], (ctx) => {
 })
 ~~~
 
-独立脚本/测试：
-
-~~~ts
-import { openMemoryCore } from 'dsh-memory-core'
-
-const core = await openMemoryCore({ path: '/tmp/memory.sqlite3' })
-// await core.createMemory(...)
-await core.close()
-~~~
-
-## 开发命令（计划）
+## 开发命令
 
 ~~~bash
 export npm_config_cache="$PWD/.tmp/npm-cache"
 npm install --no-audit --no-fund
-npm run build
-node --test tests/unit tests/integration
-node --test --experimental-test-coverage --test-coverage-lines=85 tests/unit tests/integration
+npm run typecheck
+npm test
+npm run test:coverage
 ~~~
 
 ## 非目标与后续

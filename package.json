@@ -28,8 +28,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/integration/database.test.mjs tests/integration/migrations.test.mjs",
-    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/integration/database.test.mjs tests/integration/migrations.test.mjs"
+    "test": "npm run build && node --test tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
