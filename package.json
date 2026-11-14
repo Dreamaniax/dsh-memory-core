@@ -1,0 +1,38 @@
+{
+  "name": "dsh-memory-core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reusable local-first long-term memory infrastructure for DSH plugins (SQLite + FTS5).",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "migrations",
+    "docs",
+    "README.md",
+    "ARCHITECTURE.md",
+    "DATABASE_SCHEMA.md",
+    "API_REFERENCE.md",
+    "IMPLEMENTATION_PLAN.md"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/integration/database.test.mjs tests/integration/migrations.test.mjs",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/integration/database.test.mjs tests/integration/migrations.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3"
+  }
+}
