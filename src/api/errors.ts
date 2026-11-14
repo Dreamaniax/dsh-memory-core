@@ -1,3 +1,4 @@
+import type { FeedbackAction, MemoryStatus } from './contracts.js'
 import { MemoryStorageError, isSqliteBusy, type StorageErrorCode } from '../storage/sqlite-errors.js'
 
 export type MemoryErrorCode =
@@ -54,6 +55,22 @@ export function notFound(kind: 'memory' | 'source' | 'feedback' = 'memory'): Mem
 
 export function duplicateId(): MemoryError {
   return new MemoryError('DUPLICATE_ID', 'A memory with this id already exists in the namespace')
+}
+
+export function idempotencyConflict(requestId: string): MemoryError {
+  return new MemoryError(
+    'IDEMPOTENCY_CONFLICT',
+    'requestId was already used with a different request payload',
+    { details: { requestId } },
+  )
+}
+
+export function invalidStateTransition(action: FeedbackAction, fromStatus: MemoryStatus): MemoryError {
+  return new MemoryError(
+    'INVALID_STATE_TRANSITION',
+    'Feedback action is not allowed from the current memory status',
+    { details: { action, fromStatus } },
+  )
 }
 
 export function versionConflict(expectedVersion: number, actualVersion: number): MemoryError {

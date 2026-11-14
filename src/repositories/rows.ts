@@ -1,4 +1,6 @@
 import type {
+  Feedback,
+  FeedbackAction,
   Memory,
   MemoryChangeType,
   MemoryStatus,
@@ -56,6 +58,22 @@ export interface MemoryVersionRow {
   change_type: MemoryChangeType
   change_reason: string | null
   changed_by: string | null
+  created_at: number
+}
+
+export interface FeedbackRow {
+  id: string
+  namespace_id: string
+  memory_id: string
+  action: FeedbackAction
+  request_id: string
+  request_hash: string
+  expected_version: number | null
+  applied_version: number
+  comment: string | null
+  patch_json: string | null
+  metadata_json: string
+  actor: string | null
   created_at: number
 }
 
@@ -166,6 +184,28 @@ export function rowToMemoryVersion(row: MemoryVersionRow): MemoryVersion {
     contentHash: row.content_hash,
     createdAt: new Date(row.created_at).toISOString(),
     snapshot,
+  }
+}
+
+export function rowToFeedback(row: FeedbackRow): Feedback {
+  const patch = row.patch_json === null ? null : parseStoredJson(row.patch_json, 'feedback patch')
+  if (patch !== null && !isRecord(patch)) {
+    throw corrupt('stored feedback patch is not an object')
+  }
+  return {
+    id: row.id,
+    namespaceId: row.namespace_id,
+    memoryId: row.memory_id,
+    action: row.action,
+    requestId: row.request_id,
+    requestHash: row.request_hash,
+    expectedVersion: row.expected_version,
+    appliedVersion: row.applied_version,
+    comment: row.comment,
+    patch,
+    metadata: parseMetadataText(row.metadata_json),
+    actor: row.actor,
+    createdAt: new Date(row.created_at).toISOString(),
   }
 }
 

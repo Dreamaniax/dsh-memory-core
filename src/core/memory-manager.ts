@@ -1,6 +1,5 @@
 import type {
   Memory,
-  MemoryChangeType,
   MemoryVersion,
   Page,
   Source,
@@ -27,13 +26,11 @@ import {
 import type { MemoryRepository } from '../repositories/memory-repository.js'
 import type { MemoryRow } from '../repositories/rows.js'
 import {
-  memorySnapshotHash,
   rowToMemory,
   rowToMemoryVersion,
   rowToSource,
   serializeMetadata,
   serializeTags,
-  toMemorySnapshot,
 } from '../repositories/rows.js'
 import type { SourceService } from './source-service.js'
 import type { SqliteStore } from '../storage/sqlite-store.js'
@@ -41,7 +38,7 @@ import { isUniqueConstraint } from '../storage/sqlite-errors.js'
 import type { Clock } from '../utils/clock.js'
 import { systemClock } from '../utils/clock.js'
 import { newId } from '../utils/ids.js'
-import { canonicalStringify } from '../utils/json.js'
+import { writeMemoryVersion } from './version-writer.js'
 
 function hasOwn(value: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key)
@@ -116,7 +113,7 @@ export class MemoryManager {
         throw error
       }
       const memory = rowToMemory(row, now)
-      this.writeVersion(memory, 'create', null, null, now)
+      writeMemoryVersion(this.memories, memory, 'create', null, null, now)
       for (const sourceInput of input.sources) {
         this.sources.attachForCreate(input.namespaceId, id, sourceInput, now)
       }
@@ -207,7 +204,7 @@ export class MemoryManager {
         throw versionConflict(row.version, latest?.version ?? row.version + 1)
       }
       const memory = rowToMemory(nextRow, now)
-      this.writeVersion(memory, 'update', input.changeReason ?? null, input.changedBy ?? null, now)
+      writeMemoryVersion(this.memories, memory, 'update', input.changeReason ?? null, input.changedBy ?? null, now)
       return memory
     })
   }
@@ -233,7 +230,7 @@ export class MemoryManager {
         const latest = this.memories.findById(input.namespaceId, input.memoryId, true)
         throw versionConflict(row.version, latest?.version ?? row.version + 1)
       }
-      this.writeVersion(rowToMemory(nextRow, now), 'delete', input.reason ?? null, null, now)
+      writeMemoryVersion(this.memories, rowToMemory(nextRow, now), 'delete', input.reason ?? null, null, now)
     })
   }
 
@@ -295,24 +292,4 @@ export class MemoryManager {
     return parsed
   }
 
-  private writeVersion(
-    memory: Memory,
-    changeType: MemoryChangeType,
-    changeReason: string | null,
-    changedBy: string | null,
-    nowMs: number,
-  ): void {
-    const snapshot = toMemorySnapshot(memory)
-    this.memories.insertVersion({
-      namespace_id: memory.namespaceId,
-      memory_id: memory.id,
-      version: memory.version,
-      snapshot_json: canonicalStringify(snapshot),
-      content_hash: memorySnapshotHash(snapshot),
-      change_type: changeType,
-      change_reason: changeReason,
-      changed_by: changedBy,
-      created_at: nowMs,
-    })
-  }
 }

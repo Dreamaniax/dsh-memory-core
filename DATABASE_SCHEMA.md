@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 数据库 Schema 与迁移设计
 
-- 状态：Sprint 1 已实现并验证（migrations/001_initial.sql 与本文 DDL 完全一致）
+- 状态：Sprint 1 已实现并验证（migrations/001_initial.sql 与本文 DDL 完全一致）；Sprint 3 的搜索/反馈复用既有 memory_fts、memory_feedback、memory_versions 表，无新增迁移
 - 数据库：SQLite 3.53.4（node:sqlite）
 - 默认路径：$DSH_HOME/memory-core/memory.sqlite3
 - 字符集：UTF-8；时间：INTEGER epoch milliseconds（UTC）

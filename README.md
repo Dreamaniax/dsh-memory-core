@@ -2,8 +2,8 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：Phase 0/1 契约已收口；Sprint 1（SQLite foundation）与 Sprint 2（CRUD + provenance）已实现，23 项集成测试通过。
-> 当前可运行范围：SQLite Store、迁移、001 Schema、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪。search/feedback/Cordis 插件仍在 Sprint 3/4。
+> 状态：Phase 0/1 契约已收口；Sprint 1（SQLite foundation）、Sprint 2（CRUD + provenance）与 Sprint 3（关键词搜索 + 用户反馈）已实现，43 项测试通过。
+> 当前可运行范围：SQLite Store、迁移、001 Schema、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈。Cordis 插件仍在 Sprint 4。
 
 ## 为什么
 
@@ -25,8 +25,7 @@ Memory Core 提供一个共享的进程内服务与可独立导入的库：
 - 状态：candidate / active / flagged / rejected / deleted；过期由 expires_at 计算。
 - 来源：direct / inferred / imported + sources 多对多。
 - 反馈：confirm / correct / reject / flag；request_id 幂等；版本历史。
-- API（Sprint 2 已实现）：createMemory、getMemory、listMemories、updateMemory、deleteMemory、addSource、getSources、getMemoryVersions、backupTo、healthCheck、close。
-- API（Sprint 3）：searchMemories、submitFeedback、getFeedbackHistory。
+- API（Sprint 2/3 已实现）：createMemory、getMemory、listMemories、updateMemory、deleteMemory、purgeMemory、addSource、getSources、getMemoryVersions、searchMemories、submitFeedback、addMemoryFeedback、getFeedbackHistory、rebuildSearchIndex、backupTo、healthCheck、close。
 - Library 工厂已可用；进程内 Cordis Service（memoryCore）在 Sprint 4 接线。
 
 明确不做：向量库、embedding、自动 LLM 抽取、自动 consolidation、多机同步、复杂用户画像、HTTP 服务。
@@ -60,6 +59,7 @@ $DSH_HOME/memory-core/memory.sqlite3
 - [Phase 1 收口报告](docs/PHASE1_CLOSEOUT.md)
 - [Sprint 1 实施报告](docs/SPRINT1_REPORT.md)
 - [Sprint 2 实施报告](docs/SPRINT2_REPORT.md)
+- [Sprint 3 实施报告](docs/SPRINT3_REPORT.md)
 - [实施计划与验收](IMPLEMENTATION_PLAN.md)
 - ADRs：
   - [0001 TypeScript ESM](docs/adr/0001-typescript-esm.md)
@@ -89,7 +89,7 @@ $DSH_HOME/memory-core/memory.sqlite3
 
 ## 用法
 
-Sprint 2 已可通过库工厂使用；Cordis 插件入口在 Sprint 4 接线。
+Sprint 2/3 已可通过库工厂使用；Cordis 插件入口在 Sprint 4 接线。
 
 独立脚本/测试：
 
@@ -105,7 +105,19 @@ const memory = await core.createMemory({
   sources: [{ type: 'plugin', externalRef: 'weekly-retro/run-1' }],
 })
 const page = await core.listMemories({ namespaceId: 'weekly-retro' })
-console.log(page.total, memory.id)
+const hits = await core.searchMemories({
+  namespaceId: 'weekly-retro',
+  query: '周报 采集',
+  statuses: ['active', 'candidate'],
+})
+const confirmed = await core.submitFeedback({
+  namespaceId: 'weekly-retro',
+  memoryId: memory.id,
+  action: 'confirm',
+  requestId: 'confirm-weekly-retro-1',
+  expectedVersion: memory.version,
+})
+console.log(page.total, hits.total, confirmed.memory.status)
 await core.close()
 ~~~
 
@@ -126,6 +138,7 @@ npm install --no-audit --no-fund
 npm run typecheck
 npm test
 npm run test:coverage
+npm run benchmark
 ~~~
 
 ## 非目标与后续

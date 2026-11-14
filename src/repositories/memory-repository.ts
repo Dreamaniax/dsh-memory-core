@@ -39,7 +39,7 @@ export interface MemoryVersionListRows {
   total: number
 }
 
-const MEMORY_COLUMNS = [
+export const MEMORY_COLUMNS = [
   'm.fts_rowid',
   'm.id',
   'm.namespace_id',
@@ -120,6 +120,48 @@ export class MemoryRepository {
       row.confidence,
       row.metadata_json,
       row.expires_at,
+      row.updated_at,
+      row.version,
+      row.namespace_id,
+      row.id,
+      expectedVersion,
+    )
+    return result.changes === 1
+  }
+
+  updateLifecycle(row: MemoryRow, expectedVersion: number): boolean {
+    const result = this.db.prepare(
+      'UPDATE memory_items SET status = ?, confirmed_at = ?, updated_at = ?, version = ? ' +
+      'WHERE namespace_id = ? AND id = ? AND version = ? AND status <> \'deleted\'',
+    ).run(
+      row.status,
+      row.confirmed_at,
+      row.updated_at,
+      row.version,
+      row.namespace_id,
+      row.id,
+      expectedVersion,
+    )
+    return result.changes === 1
+  }
+
+  updateFromFeedback(row: MemoryRow, expectedVersion: number): boolean {
+    const result = this.db.prepare(
+      'UPDATE memory_items SET ' +
+        'memory_type = ?, status = ?, extraction_origin = ?, title = ?, content = ?, tags_text = ?, ' +
+        'confidence = ?, metadata_json = ?, expires_at = ?, confirmed_at = ?, updated_at = ?, version = ? ' +
+      'WHERE namespace_id = ? AND id = ? AND version = ? AND status <> \'deleted\'',
+    ).run(
+      row.memory_type,
+      row.status,
+      row.extraction_origin,
+      row.title,
+      row.content,
+      row.tags_text,
+      row.confidence,
+      row.metadata_json,
+      row.expires_at,
+      row.confirmed_at,
       row.updated_at,
       row.version,
       row.namespace_id,

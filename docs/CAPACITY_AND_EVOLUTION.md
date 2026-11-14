@@ -3,7 +3,7 @@
 - 状态：设计稿（v0.1 不实现自动巩固/关系图/归档/向量）
 - 日期：2026-11-14
 - 关联：DATABASE_SCHEMA.md、IMPLEMENTATION_PLAN.md、ADR 0008/0009
-- 重要：本文所有容量数字都是**情景估算**，不是实测；实测基准在 Sprint 3 单独报告。
+- 重要：本文所有容量数字都是**情景估算**，不是实测；Sprint 3 的 10k 单机单进程实测见 [docs/SPRINT3_REPORT.md](SPRINT3_REPORT.md)，实测点不能直接替代本文十年情景。
 
 ## 1. 估算假设与公式
 

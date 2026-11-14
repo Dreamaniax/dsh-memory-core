@@ -3,6 +3,9 @@ import type {
   AddSourceInput,
   CreateMemoryInput,
   DeleteMemoryInput,
+  Feedback,
+  FeedbackResult,
+  GetFeedbackHistoryInput,
   GetMemoryInput,
   GetMemoryVersionsInput,
   GetSourcesInput,
@@ -11,7 +14,10 @@ import type {
   MemoryVersion,
   Page,
   PurgeMemoryInput,
+  SearchHit,
+  SearchMemoriesInput,
   Source,
+  SubmitFeedbackInput,
   UpdateMemoryInput,
 } from './contracts.js'
 import { invalidArgument, toMemoryError } from './errors.js'
@@ -21,8 +27,11 @@ import {
   resolveValidationConfig,
   type ValidationConfig,
 } from './validation.js'
+import { FeedbackService } from '../core/feedback-service.js'
 import { MemoryManager } from '../core/memory-manager.js'
+import { SearchService } from '../core/search-service.js'
 import { SourceService } from '../core/source-service.js'
+import { FeedbackRepository } from '../repositories/feedback-repository.js'
 import { MemoryRepository } from '../repositories/memory-repository.js'
 import { SourceRepository } from '../repositories/source-repository.js'
 import { SqliteStore, type BackupResult, type HealthReport, type OpenSqliteStoreOptions } from '../storage/sqlite-store.js'
@@ -38,6 +47,12 @@ export interface MemoryApi {
   addSource(input: AddSourceInput): Promise<Source>
   getSources(input: GetSourcesInput): Promise<Source[]>
   getMemoryVersions(input: GetMemoryVersionsInput): Promise<Page<MemoryVersion>>
+  searchMemories(input: SearchMemoriesInput): Promise<Page<SearchHit>>
+  submitFeedback(input: SubmitFeedbackInput): Promise<FeedbackResult>
+  /** Compatibility alias for submitFeedback. */
+  addMemoryFeedback(input: SubmitFeedbackInput): Promise<FeedbackResult>
+  getFeedbackHistory(input: GetFeedbackHistoryInput): Promise<Page<Feedback>>
+  rebuildSearchIndex(): Promise<void>
   backupTo(path: string): Promise<BackupResult>
   healthCheck(): Promise<HealthReport>
   close(): Promise<void>
@@ -50,6 +65,8 @@ export interface OpenMemoryCoreOptions extends OpenSqliteStoreOptions {
 class MemoryApiImpl implements MemoryApi {
   private readonly store: SqliteStore
   private readonly manager: MemoryManager
+  private readonly search: SearchService
+  private readonly feedback: FeedbackService
   private readonly schemas: ReturnType<typeof createValidationSchemas>
 
   constructor(store: SqliteStore, validation: ValidationConfig, clock: Clock) {
@@ -59,6 +76,8 @@ class MemoryApiImpl implements MemoryApi {
     const sourceRepository = new SourceRepository(store)
     const sourceService = new SourceService(sourceRepository)
     this.manager = new MemoryManager(store, memories, sourceService, clock)
+    this.search = new SearchService(store, clock)
+    this.feedback = new FeedbackService(store, memories, new FeedbackRepository(store), clock)
   }
 
   async createMemory(input: CreateMemoryInput): Promise<Memory> {
@@ -137,6 +156,45 @@ class MemoryApiImpl implements MemoryApi {
     try {
       const validated = parseInput(this.schemas.getMemoryVersions, input, 'input')
       return this.manager.getMemoryVersions(validated)
+    } catch (error) {
+      throw toMemoryError(error)
+    }
+  }
+
+  async searchMemories(input: SearchMemoriesInput): Promise<Page<SearchHit>> {
+    try {
+      const validated = parseInput(this.schemas.searchMemories, input, 'input')
+      return this.search.search(validated)
+    } catch (error) {
+      throw toMemoryError(error)
+    }
+  }
+
+  async submitFeedback(input: SubmitFeedbackInput): Promise<FeedbackResult> {
+    try {
+      const validated = parseInput(this.schemas.submitFeedback, input, 'input')
+      return this.feedback.submit(validated)
+    } catch (error) {
+      throw toMemoryError(error)
+    }
+  }
+
+  async addMemoryFeedback(input: SubmitFeedbackInput): Promise<FeedbackResult> {
+    return this.submitFeedback(input)
+  }
+
+  async getFeedbackHistory(input: GetFeedbackHistoryInput): Promise<Page<Feedback>> {
+    try {
+      const validated = parseInput(this.schemas.getFeedbackHistory, input, 'input')
+      return this.feedback.history(validated)
+    } catch (error) {
+      throw toMemoryError(error)
+    }
+  }
+
+  async rebuildSearchIndex(): Promise<void> {
+    try {
+      this.search.rebuildIndex()
     } catch (error) {
       throw toMemoryError(error)
     }

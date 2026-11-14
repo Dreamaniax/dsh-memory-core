@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { invalidArgument, type MemoryError } from './errors.js'
+import { countCodePoints } from '../utils/text.js'
 
 export interface ValidationConfig {
   /** Maximum content length in Unicode code points. */
@@ -230,6 +231,65 @@ export function createValidationSchemas(config: ValidationConfig) {
     offset,
   }).strict()
 
+  const snippetChars = z.number().int().min(32).max(500).default(160)
+  const searchStatusSchema = z.enum(['candidate', 'active', 'flagged'])
+  const searchQuerySchema = z
+    .string()
+    .refine(value => !hasNul(value), { message: 'must not contain NUL' })
+    .refine(value => value.trim().replace(/\s+/gu, ' ').length > 0, { message: 'must not be blank' })
+    .refine(value => countCodePoints(value.trim().replace(/\s+/gu, ' ')) <= 500, {
+      message: 'must be at most 500 Unicode code points',
+    })
+
+  const searchMemoriesSchema = z.object({
+    namespaceId: namespaceSchema,
+    query: searchQuerySchema,
+    types: z.array(memoryTypeSchema).min(1).max(4).transform(dedupe).optional(),
+    statuses: z.array(searchStatusSchema).min(1).max(3).transform(dedupe).optional(),
+    limit,
+    offset,
+    snippetChars,
+  }).strict()
+
+  const feedbackPatchSchema = z.object({
+    title: titleSchema.optional(),
+    content: contentSchema.optional(),
+    tags: tags.optional(),
+    confidence: confidenceSchema.nullable().optional(),
+    metadata: metadata.optional(),
+    expiresAt: expiresAtSchema.nullable().optional(),
+  }).strict().refine(value => Object.keys(value).length > 0, {
+    message: 'patch must contain at least one field',
+  })
+
+  const submitFeedbackSchema = z.object({
+    namespaceId: namespaceSchema,
+    memoryId: uuidSchema,
+    action: z.enum(['confirm', 'correct', 'reject', 'flag']),
+    requestId: stringField(1, 128).regex(/^[A-Za-z0-9._:-]+$/, {
+      message: 'must match ^[A-Za-z0-9._:-]+$',
+    }),
+    expectedVersion,
+    comment: optionalText(10_000).optional(),
+    patch: feedbackPatchSchema.optional(),
+    metadata: metadata.default({}),
+    actor: optionalText(128).optional(),
+  }).strict().superRefine((value, ctx) => {
+    if (value.action === 'correct' && value.patch === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['patch'], message: 'is required for correct' })
+    }
+    if (value.action !== 'correct' && value.patch !== undefined) {
+      ctx.addIssue({ code: 'custom', path: ['patch'], message: 'is only allowed for correct' })
+    }
+  })
+
+  const getFeedbackHistorySchema = z.object({
+    namespaceId: namespaceSchema,
+    memoryId: uuidSchema,
+    limit,
+    offset,
+  }).strict()
+
   return {
     createMemory: createMemorySchema,
     getMemory: getMemorySchema,
@@ -240,6 +300,9 @@ export function createValidationSchemas(config: ValidationConfig) {
     addSource: addSourceSchema,
     getSources: getSourcesSchema,
     getMemoryVersions: getMemoryVersionsSchema,
+    searchMemories: searchMemoriesSchema,
+    submitFeedback: submitFeedbackSchema,
+    getFeedbackHistory: getFeedbackHistorySchema,
   }
 }
 
@@ -253,6 +316,9 @@ export type ValidatedPurgeMemoryInput = z.infer<ValidationSchemas['purgeMemory']
 export type ValidatedAddSourceInput = z.infer<ValidationSchemas['addSource']>
 export type ValidatedGetSourcesInput = z.infer<ValidationSchemas['getSources']>
 export type ValidatedGetMemoryVersionsInput = z.infer<ValidationSchemas['getMemoryVersions']>
+export type ValidatedSearchMemoriesInput = z.infer<ValidationSchemas['searchMemories']>
+export type ValidatedSubmitFeedbackInput = z.infer<ValidationSchemas['submitFeedback']>
+export type ValidatedGetFeedbackHistoryInput = z.infer<ValidationSchemas['getFeedbackHistory']>
 
 function containsForbiddenKey(value: unknown, depth = 0, seen = new WeakSet<object>()): boolean {
   if (depth > 20) return true

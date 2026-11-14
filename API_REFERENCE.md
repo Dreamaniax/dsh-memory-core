@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — API Reference / 契约
 
-- 状态：Phase 1 契约收口；Sprint 1 已实现 SQLite/Schema；公共 API 待 Sprint 2
+- 状态：Phase 1 契约收口；Sprint 1 SQLite/Schema、Sprint 2 CRUD/provenance、Sprint 3 search/feedback 已实现；Cordis Service 在 Sprint 4 接线
 - 传输：进程内 TypeScript API（无 HTTP）；Cordis 服务名 memoryCore
 - 身份：**namespace-scoped identity**；一条记忆的身份是 (namespaceId, id)
 - 错误：抛出 MemoryError（稳定 code），不使用模糊 null 表示失败
@@ -332,13 +332,14 @@ export interface FeedbackResult {
 
 ### 3.7 searchMemories
 
-- query 去首尾空白、压缩连续空白；1..500 字符；拒绝 NUL。
+- query 去首尾空白、压缩连续空白；1..500 Unicode code points；拒绝 NUL。
 - statuses 只允许 candidate/active/flagged；默认 ['active']；rejected/deleted/expired 永不返回。
 - 查询长度（Unicode code points）< 3，或任一词 < 3 字符 -> LIKE 回退；否则 FTS trigram。
 - FTS：每个空白分隔词作为带引号 phrase，AND 连接；BM25 权重 title 5.0/content 1.0/tags 2.0；score = -bm25。
 - LIKE：转义 %/_/\，按 updatedAt desc；matchedBy='like'，score=null。
-- 返回 snippet（去标记纯文本，长度受 snippetChars 限制）。
+- 返回 snippet（去标记纯文本，长度受 snippetChars 限制；默认 160）。
 - 分页与 total 同 list。
+- 索引由 memory_fts 触发器维护；迁移/恢复后可用 rebuildSearchIndex 重建。
 
 ### 3.8 addSource / getSources
 
@@ -350,13 +351,14 @@ export interface FeedbackResult {
 ### 3.9 submitFeedback
 
 - requestId 必填；expectedVersion 必填。
+- requestHash = SHA-256(canonical JSON of {namespaceId, memoryId, action, expectedVersion, comment, patch, metadata, actor})；同一 requestId 但 payload（含 expectedVersion）不同视为不同请求。
 - 重复 (namespace, requestId)：
   - requestHash 相同 -> 返回已有 feedback + 当前 memory，duplicate=true；不重复写、不检查 expectedVersion/state。
   - requestHash 不同 -> IDEMPOTENCY_CONFLICT。
 - confirm：candidate/flagged/rejected -> active；设置 confirmedAt=now；如果状态或 confirmedAt 变化则 version++ 并写版本；已 active 且已确认则只追加反馈，appliedVersion=当前版本。
 - correct：patch 必填且至少一个字段；应用 patch；设置 status=active、origin=direct、confirmedAt=now；version++；写版本。
-- reject：candidate/active/flagged -> rejected；状态变化时 version++；否则只追加反馈。
-- flag：candidate/active -> flagged；状态变化时 version++；否则只追加反馈。
+- reject：candidate/active/flagged -> rejected；version++ 并写版本；其他状态 -> INVALID_STATE_TRANSITION。
+- flag：candidate/active -> flagged；version++ 并写版本；其他状态 -> INVALID_STATE_TRANSITION。
 - deleted -> MEMORY_DELETED；其他非法迁移 -> INVALID_STATE_TRANSITION。
 - 反馈与版本写入同一事务；FTS 随 content 更新同步。
 - 返回 feedback、最新 memory、duplicate。
@@ -369,6 +371,7 @@ export interface FeedbackResult {
 
 ### 3.11 管理方法
 
+- rebuildSearchIndex：执行 FTS5 rebuild；用于迁移/恢复/索引巡检后重建，不改变记忆内容。
 - backupTo(path)：绝对路径；父目录创建 0700；临时文件 + rename；integrity_check；返回 bytes。
 - healthCheck：integrity_check、foreign_key_check、FTS integrity-check、schema/application_id/PRAGMA 状态。
 - close：幂等；活跃事务中抛错（同步驱动无法等待）；关闭后调用返回 CLOSED。

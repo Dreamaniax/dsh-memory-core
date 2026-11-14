@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 实施计划与验收
 
-- 状态：Phase 0/1 已收口；Sprint 1 与 Sprint 2 已完成；Sprint 3（search/feedback）待实施
+- 状态：Phase 0/1 已收口；Sprint 1、Sprint 2、Sprint 3 已完成；Sprint 4（Cordis 集成与发布）待实施
 - 原则：小步可验证；每阶段有验收命令、证据、回滚点；不修改无关现有插件
 - 依据：docs/PHASE0_INVESTIGATION.md、ARCHITECTURE.md、DATABASE_SCHEMA.md、API_REFERENCE.md
 
@@ -76,7 +76,7 @@ node --test tests/integration/database.test.mjs
 4. rows.ts + repositories：
    - memory insert/find/update/softDelete/purge/list/versions（身份键 namespace_id + id）。
    - sources 去重/关联/查询/孤儿清理。
-   - feedback 仅预留接口（Sprint 3 完成）。
+   - feedback 在 Sprint 3 已完成。
 5. memory-manager.ts：create/get/list/update/delete/purge 用例与事务。
 6. source-service.ts。
 7. memory-api.ts：公共门面；所有输入校验；错误映射。
@@ -139,10 +139,11 @@ node --test --experimental-test-coverage tests/unit tests/integration
 ### 验收命令
 
 ~~~bash
+npm run typecheck
 npm run build
-node --test tests/unit tests/integration
-node --test --experimental-test-coverage --test-coverage-lines=85 --test-coverage-functions=85 tests/unit tests/integration
-node benchmarks/10k.mjs --json > .tmp/bench-10k.json
+npm test
+npm run test:coverage
+node benchmarks/10k.mjs > .tmp/bench-10k.json
 ~~~
 
 ### 通过标准
@@ -151,6 +152,15 @@ node benchmarks/10k.mjs --json > .tmp/bench-10k.json
 - 反馈幂等与 correction 版本历史有测试证据。
 - FTS integrity-check 通过；重建后结果一致。
 - 10k 基准输出 JSON，记录 p50/p95、写入耗时、DB 大小；不设硬性 CI 阈值，但报告中给出基线。
+
+### 实现结果（已完成）
+
+- 搜索：`src/search/query-builder.ts`、`src/search/keyword-search.ts`、`src/core/search-service.ts`；FTS trigram + 短查询 LIKE 回退，BM25 title 5/content 1/tags 2，type/status/namespace/expiry 过滤。
+- 反馈：`src/core/feedback-service.ts`、`src/repositories/feedback-repository.ts`；四种 action、requestHash 幂等、版本快照与反馈同事务、软删除历史、purge 级联。
+- 版本写入抽到 `src/core/version-writer.ts`，MemoryManager 与 FeedbackService 共用。
+- 验证：43 项测试通过；整体 lines 95.75%、branches 84.79%、functions 94.63%；核心 service 行/函数均 >=85%。
+- 10k 基准已落盘到 `docs/SPRINT3_REPORT.md`：10,000 条记忆，创建 p50 0.346ms / p95 1.966ms，搜索 p50 6.121ms / p95 23.492ms，DB 118,390,784 bytes（FTS 52,445,184 bytes）。
+- 无新增迁移；复用 001 schema 的 memory_feedback、memory_versions、memory_fts。
 
 ### 回滚点
 
@@ -204,16 +214,16 @@ npm pack --dry-run
 | # | 要求 | 测试文件 | 关键断言 |
 | --- | --- | --- | --- |
 | 1 | Database initialization | tests/integration/database.test.mjs | 表/索引/触发器/app_id/user_version；重复打开幂等 |
-| 2 | CRUD operations | tests/integration/crud.test.mjs | create/get/list/update/delete 返回值与状态 |
-| 3 | Foreign-key integrity | tests/integration/database.test.mjs, sources.test.mjs | 跨 namespace 拒绝；级联删除 |
-| 4 | Keyword search | tests/integration/search.test.mjs | 英文/中文/过滤/排序/分页 |
-| 5 | Duplicate ID handling | tests/integration/crud.test.mjs | 同 namespace 重复 id -> DUPLICATE_ID；不同 namespace 可复用；自动 id 不冲突 |
-| 6 | Memory state transitions | tests/integration/crud.test.mjs, feedback.test.mjs | update 不改 status；confirm/correct/reject/flag 矩阵；非法迁移 |
-| 7 | User feedback | tests/integration/feedback.test.mjs | 四种 action；request_hash 幂等；无变化不增版本；版本 |
-| 8 | Persistence across restarts | tests/integration/database.test.mjs | close/reopen 后数据仍在 |
+| 2 | CRUD operations | tests/integration/memory-api.test.mjs | create/get/list/update/delete 返回值与状态 |
+| 3 | Foreign-key integrity | tests/integration/database.test.mjs, memory-api.test.mjs | 跨 namespace 拒绝；级联删除 |
+| 4 | Keyword search | tests/integration/search.test.mjs, tests/unit/query-builder.test.mjs | 英文/中文 2/3/4 字符/混合/过滤/排序/分页/snippet |
+| 5 | Duplicate ID handling | tests/integration/memory-api.test.mjs | 同 namespace 重复 id -> DUPLICATE_ID；不同 namespace 可复用 |
+| 6 | Memory state transitions | tests/integration/memory-api.test.mjs, feedback.test.mjs | update 不改 status；confirm/correct/reject/flag 矩阵；非法迁移 |
+| 7 | User feedback | tests/integration/feedback.test.mjs | 四种 action；requestHash 幂等/冲突；版本快照；软删除历史 |
+| 8 | Persistence across restarts | tests/integration/database.test.mjs, memory-api.test.mjs, feedback.test.mjs | close/reopen 后记忆/版本/来源/反馈仍在 |
 | 9 | Database migrations | tests/integration/migrations.test.mjs | 升级/失败回滚/checksum/未来版本 |
-| 10 | Invalid inputs & SQL injection | tests/unit/validation.test.mjs, tests/integration/injection.test.mjs | 拒绝 + 库结构完好 |
-| 11 | Deletion and cleanup | tests/integration/deletion.test.mjs | 软删除；purge token/级联、孤儿 source、搜索排除 |
+| 10 | Invalid inputs & SQL injection | tests/integration/memory-api.test.mjs, search.test.mjs | 拒绝 + FTS/LIKE 特殊字符不执行 + 库结构完好 |
+| 11 | Deletion and cleanup | tests/integration/memory-api.test.mjs, search.test.mjs, feedback.test.mjs | 软删除；purge token/级联、孤儿 source、搜索排除、反馈级联 |
 
 ## 7. 风险登记与缓解
 
@@ -240,7 +250,7 @@ npm pack --dry-run
 | 架构设计 | Phase 1 | ARCHITECTURE.md |
 | ADRs | Phase 1 | docs/adr/*.md |
 | SQLite schema | Phase 1/2 | DATABASE_SCHEMA.md, migrations/001_initial.sql |
-| Memory API 实现 | Sprint 2/3 | src/api, src/core, src/repositories |
+| Memory API 实现 | Sprint 2/3（完成） | src/api, src/core, src/repositories |
 | 自动化测试 | Sprint 1-3 | tests/unit, tests/integration |
 | 文档 | Sprint 4 | README.md, API_REFERENCE.md, SECURITY_PRIVACY.md |
 | Demo 集成 | Sprint 4 | examples/weekly-retro, examples/prompt-optimizer |
@@ -296,6 +306,7 @@ npm pack --dry-run
 - Phase 1 架构/Schema/API：收口完成（ADR 0008/0009，契约一致）。
 - Sprint 1：**完成**。SqliteStore、迁移、001 Schema、备份、13 项测试通过；详见 docs/SPRINT1_REPORT.md。
 - Sprint 2：**完成**。contracts/validation/errors、repositories、MemoryManager、MemoryApi、来源追踪、namespace 隔离、版本快照、软删除/purge；23 项集成测试通过；详见 docs/SPRINT2_REPORT.md。
-- 生产代码：CRUD + provenance 可用；search/feedback/Cordis 插件尚未开始。
-- 自动化测试：23 项通过；核心服务行/函数覆盖 >=80%；整体 lines 93.84%、functions 93.20%。
-- 下一步：Sprint 3（FTS/LIKE 搜索 + feedback，覆盖率提升到 85%）。
+- Sprint 3：**完成**。FTS5 trigram + 短查询 LIKE 回退、BM25、snippet、type/status/namespace/expiry 过滤；confirm/correct/reject/flag、requestHash 幂等、版本快照同事务、软删除历史、purge 级联；43 项测试通过；详见 docs/SPRINT3_REPORT.md。
+- 生产代码：CRUD + provenance + search/feedback 可用；Cordis Service/真实挂载在 Sprint 4。
+- 自动化测试：43 项通过；整体 lines 95.75%、branches 84.79%、functions 94.63%；核心 service 行/函数 >=85%。
+- 下一步：Sprint 4（Cordis 插件、隔离 DSH_HOME 挂载验证、示例、发布清单、许可证决策）。

@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 架构设计
 
-- 状态：Phase 1 收口；Sprint 1 storage foundation、Sprint 2 CRUD/provenance 已实现（docs/SPRINT1_REPORT.md、docs/SPRINT2_REPORT.md）；Sprint 3 search/feedback 待实施
+- 状态：Phase 1 收口；Sprint 1 storage foundation、Sprint 2 CRUD/provenance、Sprint 3 search/feedback 已实现（docs/SPRINT1_REPORT.md、docs/SPRINT2_REPORT.md、docs/SPRINT3_REPORT.md）；Sprint 4 Cordis/release 待实施
 - 依据：docs/PHASE0_INVESTIGATION.md
 - 范围：Local-first、进程内、SQLite + FTS5、无 LLM/网络依赖
 
@@ -254,7 +254,7 @@ Library 模式适合测试、CLI、迁移工具；生产插件应使用 Service�
 dsh-memory-core/
 ├── src/
 │   ├── index.ts                     # Library 公共导出
-│   ├── plugin.ts                    # Cordis Service 适配器
+│   ├── plugin.ts                    # Cordis Service 适配器（Sprint 4）
 │   ├── api/
 │   │   ├── memory-api.ts            # 公共 API 门面
 │   │   ├── contracts.ts             # 输入/输出 DTO
@@ -262,11 +262,10 @@ dsh-memory-core/
 │   │   └── errors.ts
 │   ├── core/
 │   │   ├── memory-manager.ts        # 用例编排/事务
-│   │   ├── memory-service.ts
 │   │   ├── source-service.ts
 │   │   ├── feedback-service.ts
 │   │   ├── search-service.ts
-│   │   └── memory-types.ts
+│   │   └── version-writer.ts
 │   ├── repositories/
 │   │   ├── memory-repository.ts
 │   │   ├── source-repository.ts
@@ -284,23 +283,26 @@ dsh-memory-core/
 │       ├── clock.ts
 │       ├── fs.ts
 │       ├── ids.ts
-│       └── json.ts
+│       ├── json.ts
+│       └── text.ts
 ├── migrations/
 │   └── 001_initial.sql
 ├── tests/
 │   ├── integration/
 │   ├── unit/
-│   ├── fixtures/
 │   └── helpers/
 ├── benchmarks/
 │   └── 10k.mjs
-├── examples/
+├── examples/                        # Sprint 4
 │   ├── weekly-retro/
 │   └── prompt-optimizer/
 ├── docs/
 │   ├── PHASE0_INVESTIGATION.md
 │   ├── PHASE0_EVIDENCE.md
 │   ├── SECURITY_PRIVACY.md
+│   ├── SPRINT1_REPORT.md
+│   ├── SPRINT2_REPORT.md
+│   ├── SPRINT3_REPORT.md
 │   └── adr/
 ├── ARCHITECTURE.md
 ├── DATABASE_SCHEMA.md
@@ -310,7 +312,7 @@ dsh-memory-core/
 ├── package.json
 ├── tsconfig.json
 ├── tsconfig.build.json
-└── cordis.patch.yml
+└── cordis.patch.yml                 # Sprint 4
 ~~~
 
 与最初建议的 memory-store.test.ts / memory-search.test.ts 对应关系：测试按能力拆到 tests/integration 与 tests/unit，避免单文件过大；文件名可保留 database.test.mjs、crud.test.mjs、search.test.mjs 等。
@@ -386,7 +388,7 @@ dsh-memory-core/
 - FTS：显式 fts_rowid，避免 VACUUM 破坏 external content。
 - 反馈：request_hash 幂等；correct 必须 patch；working 必须有 expiresAt。
 
-仍需你确认的产品取舍（不阻塞 Sprint 2；Sprint 3/4 可继续）：
+仍需你确认的产品取舍（不阻塞 Sprint 4；v0.1 已实现范围不受影响）：
 
 1. 备份保留 3 份、是否加密。
 2. 归档/降权的默认阈值（v0.2，不在 v0.1）。
