@@ -3,7 +3,7 @@
 - 日期：2026-11-15
 - 仓库：Dreamaniax/dsh-memory-core（private）
 - 状态：发布准备完成到“可审计的私有候选包”；**未公开发布、未 npm publish、未选择许可证**
-- 基线：Sprint 4 的 commit e762b9e；发布收口代码/门禁到 commit 72b76b2
+- 基线：Sprint 4 的 commit e762b9e；发布收口代码/门禁到 commit 542182d
 
 ## 1. 结论
 
@@ -16,7 +16,7 @@
 | 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
 | 隔离 DSH_HOME 挂载 | 通过 | ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭 |
-| 真实 tarball 安装 + 挂载 | 通过 | 干净 tarball 安装到临时 profile，再运行同一挂载 probe；commit 72b76b2 上 memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
+| 真实 tarball 安装 + 挂载 | 通过 | 干净 tarball 安装到临时 profile，再运行同一挂载 probe；commit 542182d 上 memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
 | tarball 依赖缓存 | 通过 | 冷缓存先用 npm cache add 缓存 zod packument + tarball，再以 --offline 安装；未手工复制依赖 |
 | tarball 内容审计 | 通过 | 139 个文件全部 0644；无数据库/测试/缓存/密钥/个人路径 |
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
@@ -45,7 +45,7 @@ npm install <tarball> --prefix <temp-profile-dir> --no-save --legacy-peer-deps \
 
 随后 DSH 从该临时 profile 启动，probe 通过 ctx.memoryCore 执行
 create/get/search/feedback/healthCheck/close；进程重启后读到同一 memoryId。commit
-72b76b2 上 tarball gate 的结果（全新临时 clone + 全新 gate cache）：
+542182d 上 tarball gate 的结果（全新临时 clone + 全新 gate cache）：
 
 ~~~json
 {
@@ -60,13 +60,13 @@ DSH mount verification passed
 
 该验证使用隔离 DSH_HOME；真实 ~/.dsh/profiles/web 的 mtime 仍为 2026-11-12 15:28:55。
 
-同时在全新临时 clone（HEAD 72b76b2，全新 npm cache）
+同时在全新临时 clone（HEAD 542182d，全新 npm cache）
 按顺序重跑：`npm ci` exit 0；`npm run typecheck` exit 0；`npm test` 47/47 pass、
 0 fail、212.797667 ms、exit 0；`npm run test:examples` exit 0；`npm run test:tarball`
 exit 0（130,527 bytes、139 files、memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411）。
 clone 工作区保持 clean。
 
-文档 commit 70e9001 上再次运行 `test:tarball`（全新 gate cache）exit 0：132,309 bytes、
+文档 commit 864b693 上再次运行 `test:tarball`（全新 gate cache）exit 0：132,309 bytes、
 139 files、all 0644、memoryId dbbfb11f-c203-4e27-baa3-9f09edac3ce1、writeHits 1、
 feedbackTotal 1。packed size 会随文档内容变化，最终以 gate 输出为准。
 
@@ -90,7 +90,7 @@ zod 缓存并以 `--offline` 安装 profile；它不会把工作区或 node_modu
 | --- | ---: |
 | 条目数 | 139 |
 | 文件数 | 139 |
-| packed size | 130,527 bytes（commit 72b76b2 的代码/门禁 gate）；文档 commit 70e9001 上为 132,309 bytes、139 files，最终以实际 gate 输出为准 |
+| packed size | 130,527 bytes（commit 542182d 的代码/门禁 gate）；文档 commit 864b693 上为 132,309 bytes、139 files，最终以实际 gate 输出为准 |
 | unpacked size | 约 481 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |

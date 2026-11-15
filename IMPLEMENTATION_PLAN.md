@@ -215,7 +215,7 @@ npm pack --dry-run
 - 入口：根 Library 入口保留；新增 `./plugin` 与 `cordis.patch.yml`；默认 DB `$DSH_HOME/memory-core/memory.sqlite3`。
 - 挂载：`bash tests/integration/dsh-boot-verify.sh` exit 0；隔离 DSH_HOME 中 probe 通过 `ctx.memoryCore` 完成 create/get/search/feedback/close，重启读取同一 memoryId，干净关闭无 WAL/SHM；测试未写入真实 profile。
 - 示例：`node examples/weekly-retro/ingest.mjs --selftest`、`node examples/prompt-optimizer/ingest.mjs --selftest` 均 exit 0。
-- 包审计：真实 tarball 139 files / 130,527 bytes（commit 72b76b2 的 gate）；无 DB/tests/临时数据/密钥。
+- 包审计：真实 tarball 139 files / 130,527 bytes（commit 542182d 的 gate）；无 DB/tests/临时数据/密钥。
 - 发布收口：真实 tarball 从干净副本打包并安装到隔离 DSH_HOME，挂载 probe 通过；profile 安装先 `npm cache add zod@4.4.3` 预热再用 `--offline`，未手工复制依赖；文件模式为 79×100644 + 2×100755（两个直接执行的验证脚本）；全新 clone 的 `npm ci` 通过；详见 docs/RELEASE_READINESS.md。
 - 测试：47/47 通过；lines 95.80%、branches 85.07%、functions 94.72%。
 - 仍未完成：License 决策、npm 发布、Windows 验证、备份加密/保留策略、Git 历史本机路径处理（公开前）、完全断网一次性安装证明。tarball 门禁冷缓存首次需要 registry 提供 zod packument + tarball，预热后 profile 安装为 `--offline`。详见 docs/RELEASE_READINESS.md。

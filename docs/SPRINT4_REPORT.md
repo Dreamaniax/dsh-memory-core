@@ -164,7 +164,7 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 | 项 | 值 |
 | --- | ---: |
 | 文件数 | 139 |
-| packed size | 130,527 bytes（commit 72b76b2 的 gate） |
+| packed size | 130,527 bytes（commit 542182d 的 gate） |
 | unpacked size | 481,319 bytes |
 
 包含：`lib`（js/d.ts/map）、`migrations/001_initial.sql`、`cordis.patch.yml`、根文档、`docs/`（ADR、阶段报告、发布清单）、`examples/`（两个 ingest 与 README）。

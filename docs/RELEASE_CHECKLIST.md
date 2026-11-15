@@ -17,7 +17,7 @@ candidate, not a public release. Complete the decisions below before changing th
       restart persistence, clean close). The profile install prewarms zod with npm cache add
       and then runs npm install --offline; no dependency is copied by hand.
 - [x] Tarball contents: 139 entries, all files mode 0644; packed size 130,527 bytes at
-      commit 72b76b2 and 132,309 bytes at docs commit 70e9001 (exact bytes vary with docs);
+      commit 542182d and 132,309 bytes at docs commit 864b693 (exact bytes vary with docs);
       no database, WAL/SHM, tests, node_modules, cache, log, secret, token, or personal path.
 - [x] Tracked file modes normalized in commit f6a65be (77 files 100644 plus one directly
       executed mount script 100755); after adding the tarball gate the current HEAD has
@@ -27,7 +27,7 @@ candidate, not a public release. Complete the decisions below before changing th
 - [x] Git history audit: no binary blobs, databases, logs, secrets, or tokens. Earlier commits
       retain two local absolute workspace paths; see below.
 - [x] No real DSH profile was written and no existing plugin was modified.
-- [x] Fresh-clone acceptance at commit 72b76b2: npm ci, typecheck, npm test (47/47),
+- [x] Fresh-clone acceptance at commit 542182d: npm ci, typecheck, npm test (47/47),
       test:examples, and test:tarball all exit 0; the tarball gate re-ran the isolated mount,
       restart persistence, and clean close.
 
