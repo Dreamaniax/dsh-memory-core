@@ -17,8 +17,8 @@ candidate, not a public release. Complete the decisions below before changing th
       restart persistence, clean close). The profile install prewarms zod with npm cache add
       and then runs npm install --offline; no dependency is copied by hand.
 - [x] Tarball contents: 139 entries, all files mode 0644; packed size 130,527 bytes at
-      commit 72b76b2 (docs-only changes may shift this by tens of bytes); no database, WAL/SHM,
-      tests, node_modules, cache, log, secret, token, or personal absolute path.
+      commit 72b76b2 and 132,309 bytes at docs commit 70e9001 (exact bytes vary with docs);
+      no database, WAL/SHM, tests, node_modules, cache, log, secret, token, or personal path.
 - [x] Tracked file modes normalized in commit f6a65be (77 files 100644 plus one directly
       executed mount script 100755); after adding the tarball gate the current HEAD has
       79 files 100644 and two directly executed verification scripts 100755.

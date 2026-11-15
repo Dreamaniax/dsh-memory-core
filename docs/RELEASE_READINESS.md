@@ -65,6 +65,11 @@ DSH mount verification passed
 0 fail、212.797667 ms、exit 0；`npm run test:examples` exit 0；`npm run test:tarball`
 exit 0（130,527 bytes、139 files、memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411）。
 clone 工作区保持 clean。
+
+文档收口 commit 70e9001 上再次运行 `test:tarball`（全新 gate cache）exit 0：132,309 bytes、
+139 files、all 0644、memoryId dbbfb11f-c203-4e27-baa3-9f09edac3ce1、writeHits 1、
+feedbackTotal 1。packed size 会随文档内容变化，最终以 gate 输出为准。
+
 DSH 宿主可能自行更新 desktop profile 的 pnpm 元数据，这不属于本仓库测试写入。
 
 可重复命令：
@@ -85,7 +90,7 @@ zod 缓存并以 `--offline` 安装 profile；它不会把工作区或 node_modu
 | --- | ---: |
 | 条目数 | 139 |
 | 文件数 | 139 |
-| packed size | 130,527 bytes（commit 72b76b2 的 gate；docs-only 变更会带来几十字节偏移，以 gate 输出为准） |
+| packed size | 130,527 bytes（commit 72b76b2 的代码/门禁 gate）；文档收口 commit 70e9001 上为 132,309 bytes、139 files，最终以实际 gate 输出为准 |
 | unpacked size | 约 481 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |
