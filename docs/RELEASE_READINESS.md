@@ -3,20 +3,21 @@
 - 日期：2026-11-15
 - 仓库：Dreamaniax/dsh-memory-core（private）
 - 状态：发布准备完成到“可审计的私有候选包”；**未公开发布、未 npm publish、未选择许可证**
-- 基线：Sprint 4 的 commit e762b9e；发布收口工作在本文件所在分支
+- 基线：Sprint 4 的 commit e762b9e；发布收口代码/门禁到 commit 72b76b2
 
 ## 1. 结论
 
 | 门禁 | 状态 | 证据 |
 | --- | --- | --- |
 | 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；新增 tarball gate 后当前 HEAD 为 79×100644 + 2×100755（两个直接执行的验证脚本） |
-| 干净依赖安装 | 通过（本地缓存） | 从 git archive 的干净副本执行 npm ci，exit 0 |
+| 干净依赖安装 | 通过（全新 cache + registry） | 全新临时 clone 执行 npm ci，exit 0 |
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
 | 全量测试 | 通过 | 47 / 47，0 fail |
 | 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
 | 隔离 DSH_HOME 挂载 | 通过 | ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭 |
-| 真实 tarball 安装 + 挂载 | 通过 | npm pack 后安装到临时 profile，再运行同一挂载 probe；commit 08d41b0 上 memoryId 1199e400-aac0-4b64-99d1-faf136479c52 |
+| 真实 tarball 安装 + 挂载 | 通过 | 干净 tarball 安装到临时 profile，再运行同一挂载 probe；commit 72b76b2 上 memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
+| tarball 依赖缓存 | 通过 | 冷缓存先用 npm cache add 缓存 zod packument + tarball，再以 --offline 安装；未手工复制依赖 |
 | tarball 内容审计 | 通过 | 139 个文件全部 0644；无数据库/测试/缓存/密钥/个人路径 |
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
 | Git 历史审计 | 有条件通过 | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径 |
@@ -26,22 +27,30 @@
 ## 2. 真实 tarball 安装证据
 
 干净副本来自 git archive，不包含 node_modules、lib 构建产物或 .tmp。安装命令由
-tests/integration/dsh-boot-prepare.mjs 执行：
+tests/integration/dsh-boot-prepare.mjs 执行；profile 安装前先显式预热 npm cache：
 
 ~~~bash
+npm cache add zod@4.4.3 --cache <repo>/.tmp/npm-cache \
+  --prefer-offline --fetch-retries=1 --fetch-timeout=30000 --no-audit --no-fund
 npm install <tarball> --prefix <temp-profile-dir> --no-save --legacy-peer-deps \
-  --ignore-scripts --no-audit --no-fund --fetch-retries=5 --fetch-timeout=120000 \
-  --cache <repo>/.tmp/npm-cache
+  --ignore-scripts --no-audit --no-fund --offline --fetch-retries=0 \
+  --fetch-timeout=15000 --cache <repo>/.tmp/npm-cache
 ~~~
+
+失败复现：测试缓存里可能只有 `zod-4.4.3.tgz` 而没有 packument；此时
+`npm install <tarball> --offline` 会报 `ENOTCACHED`，网络慢时非 offline 安装会卡在
+`fetch manifest zod@4.4.3`。这是测试缓存的预热缺口，不是 package.json 缺少依赖。
+修复用 `npm cache add` 让 npm 自己解析并缓存 packument + tarball，然后 profile 安装
+强制 `--offline`，不手工复制 node_modules；冷缓存首次仍需要 npm registry 一次。
 
 随后 DSH 从该临时 profile 启动，probe 通过 ctx.memoryCore 执行
 create/get/search/feedback/healthCheck/close；进程重启后读到同一 memoryId。commit
-08d41b0 上 tarball gate 的结果：
+72b76b2 上 tarball gate 的结果（全新临时 clone + 全新 gate cache）：
 
 ~~~json
 {
   "ok": true,
-  "memoryId": "1199e400-aac0-4b64-99d1-faf136479c52",
+  "memoryId": "4655d9fc-86ae-4d9f-b09a-c8d06a9d8411",
   "database": "<temp DSH_HOME>/memory-core/memory.sqlite3",
   "writeHits": 1,
   "feedbackTotal": 1
@@ -50,6 +59,12 @@ DSH mount verification passed
 ~~~
 
 该验证使用隔离 DSH_HOME；真实 ~/.dsh/profiles/web 的 mtime 仍为 2026-11-12 15:28:55。
+
+同时在全新临时 clone（HEAD 72b76b2，全新 npm cache）
+按顺序重跑：`npm ci` exit 0；`npm run typecheck` exit 0；`npm test` 47/47 pass、
+0 fail、212.797667 ms、exit 0；`npm run test:examples` exit 0；`npm run test:tarball`
+exit 0（130,527 bytes、139 files、memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411）。
+clone 工作区保持 clean。
 DSH 宿主可能自行更新 desktop profile 的 pnpm 元数据，这不属于本仓库测试写入。
 
 可重复命令：
@@ -59,7 +74,8 @@ npm run test:tarball
 ~~~
 
 该脚本从 git archive HEAD 生成干净源，执行 npm ci、build、pack，校验 tarball 的
-条目/模式/必需文件/敏感内容，再用该 tarball 跑隔离 DSH 挂载验证。
+条目/模式/必需文件/敏感内容，再用该 tarball 跑隔离 DSH 挂载验证。gate 自己预热
+zod 缓存并以 `--offline` 安装 profile；它不会把工作区或 node_modules 复制进 tarball。
 
 ## 3. tarball 内容审计
 
@@ -69,7 +85,7 @@ npm run test:tarball
 | --- | ---: |
 | 条目数 | 139 |
 | 文件数 | 139 |
-| packed size | 130,447 bytes（commit 08d41b0 的 gate） |
+| packed size | 130,527 bytes（commit 72b76b2 的 gate；docs-only 变更会带来几十字节偏移，以 gate 输出为准） |
 | unpacked size | 约 481 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |
@@ -94,17 +110,21 @@ docs/、examples/。不包含：types/（仅编译期）、测试、数据库、
   - 当前 HEAD 已不再包含这些路径（Sprint 4 已脱敏）。
 - 所有 commit 的 author/committer 使用仓库维护者的已配置 Git 身份；这是提交元数据，
   不是凭据。
-- 未跟踪的 .tmp/ 含测试日志、挂载数据库、提取的 asar 和临时推送脚本；其中可能出现
-  临时 DSH web token、本机路径和提交邮箱。它被 .gitignore 忽略，不在 Git 历史或 tarball
-  中；发布前应删除，不能作为交付物。
+- 发布收口已删除 .tmp/；重新运行门禁可能再生成测试日志、临时挂载数据库、提取的 asar
+  或临时脚本，其中可能出现临时 DSH web token、本机路径和提交邮箱。它被 .gitignore 忽略，
+  不在 Git 历史或 tarball 中；每次发布前都应删除，不能作为交付物。
 
-历史处理建议（未执行，需用户授权）：
+历史处理建议：**接受并保留现有历史（推荐）**。两条路径是开发机工作目录，不含凭据、
+真实用户记忆或会话正文；当前树已经脱敏。改写已推送历史会改变 commit SHA、要求所有
+克隆重新同步，收益与风险不成比例。公开时在 README/审计报告中说明这两条是开发机路径
+即可。
 
-1. 接受现状：仓库保持 private，公开时明确这些是开发机路径；不改写已推送历史。
-2. 重写历史：用 git filter-repo 替换这两个路径，然后 force-push；需要协调所有克隆，
+备选（均未执行，需用户明确授权）：
+
+1. 重写历史：用 git filter-repo 替换这两个路径，然后 force-push；需要协调所有克隆，
    且会改写 commit SHA。
-3. 新历史：以当前树开一个新仓库/新 root commit，保留旧仓库为归档；最干净，但丢失
-   现有提交谱系。未获得授权前不执行 2 或 3。
+2. 新历史：以当前树开一个新仓库/新 root commit，保留旧仓库为归档；最干净，但丢失
+   现有提交谱系。
 
 ## 5. 许可证
 
@@ -116,8 +136,9 @@ open source。两个候选：
 | MIT | 最短、集成摩擦最低、插件生态常见 | 无显式专利授权 |
 | Apache-2.0 | 显式专利授权、贡献/通知条款更完整 | 文本更长，需 NOTICE/合规说明 |
 
-建议：若希望给下游插件作者明确的专利授权，选 Apache-2.0；若只追求最小集成摩擦，
-选 MIT。最终由用户决定。
+建议：**MIT**。v0.1 是本地优先的基础设施包，MIT 的短文本和最低集成摩擦更适合插件生态；
+Apache-2.0 的优势是显式专利授权，若未来有企业/专利敏感的下游集成再切换。最终由用户
+明确确认，确认前不添加 LICENSE、不宣称 open source。
 
 选择后需要改：
 
@@ -133,7 +154,10 @@ open source。两个候选：
 - namespaceId 不是认证/授权边界；无加密、无多租户隔离。
 - purge 只删除当前库行；不会清除历史备份、WAL、云同步版本历史或文件系统快照。
 - 迁移前备份默认保留 3 份；备份加密/异地保留/恢复演练仍待产品决定。
-- 干净 `npm ci` 使用本机 npm cache；tarball 安装到 profile 时还需要 registry 提供 zod，未证明完全断网可用。
+- 干净 `npm ci` 需要 npm registry（或已预热 cache）；tarball gate 的冷缓存需要 registry 提供
+  zod packument + tarball，预热后 profile 安装以 `--offline` 执行。完全断网的一次性安装
+  仍未证明。
+- tarball gate 依赖本机 DSH app 与 macOS 的进程/临时目录行为；Windows 未验证。
 - 未执行 npm publish、GitHub 公开切换、Windows CI、并发写/多进程压力测试。
 - 中文 2 字查询走 LIKE，O(n)；无分词器/向量检索。
 
@@ -145,6 +169,7 @@ open source。两个候选：
 4. 选择 Windows 支持策略：补 CI/实机验证，或明确标注 unsupported/untested。
 5. 决定备份加密、保留周期和恢复演练 owner。
 6. 跑完整门禁：typecheck、test、coverage、examples、test:dsh、test:tarball、pack 审计。
+   `test:tarball` 的冷缓存首次需要 registry；若要在 CI 完全离线运行，先预热 zod cache。
 7. 仓库转 public 前再次扫描 secrets/历史/许可证；转 public 后再做 GitHub release/tag。
 8. 若要 npm 发布：移除 private、确认包名可用、npm publish --dry-run、再正式 publish。
 

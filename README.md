@@ -202,6 +202,8 @@ npm pack --dry-run        # 发布内容审计
 
 挂载测试会创建临时 `DSH_HOME`，安装本包与 probe 插件，启动 DSH，验证 `ctx.memoryCore` 的 create/get/search/feedback/close、重启持久化和干净关闭；默认不保留临时目录，设置 `KEEP_DSH_BOOT_ARTIFACTS=1` 可保留证据。它不会写真实 `~/.dsh`。tarball 门禁使用 `git archive HEAD` 的干净副本（因此不要在未提交的工作区上把它当成最终证据），并校验 0644 文件模式、包内容和敏感路径；它需要本机 DSH app。
 
+tarball 门禁会先用 `npm cache add zod@4.4.3` 预热测试 cache，再以 `--offline` 把 tarball 安装到临时 profile：冷缓存首次需要 npm registry 一次，预热后安装不发起 HTTP 请求；它不会手工复制 `node_modules`。若要在完全断网的 CI 中运行，先预热 `.tmp/npm-cache`。完整 tarball 证据与失败复现见 [发布就绪审计](docs/RELEASE_READINESS.md)。
+
 ## 文档
 
 - [Phase 0 环境调查报告](docs/PHASE0_INVESTIGATION.md)
@@ -253,4 +255,4 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 ## License
 
-TBD，待用户决定。候选是 MIT（最短、集成摩擦最低、无显式专利授权）或 Apache-2.0（含显式专利授权、文本更长）。未声明 License 前不要对外声称开源或发布 npm。选择后需要新增 LICENSE、在 package.json 声明 license，并更新本节。
+TBD，待用户明确确认。建议 MIT（最短、集成摩擦最低，适合本地优先的插件基础设施）；若未来需要显式专利授权，再评估 Apache-2.0。未声明 License 前不要对外声称开源或发布 npm。选择后需要新增 LICENSE、在 package.json 声明 license，并更新本节。

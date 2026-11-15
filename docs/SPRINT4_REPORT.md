@@ -157,13 +157,15 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 
 发布收口后补充了真实 tarball 门禁：从 git archive HEAD 的干净副本 npm pack，安装到临时 DSH_HOME profile 并重跑挂载 probe；同时校验全部文件为 0644、无测试/数据库/缓存/密钥/个人路径。命令为 `npm run test:tarball`，详见 docs/RELEASE_READINESS.md。
 
+门禁在安装 profile 前先用 `npm cache add zod@4.4.3` 预热测试 cache，再以 `--offline` 执行 `npm install <tarball>`。此前复现到：测试 cache 只有 `zod-4.4.3.tgz`、没有 packument 时，offline 安装报 `ENOTCACHED`；网络慢时非 offline 安装会卡在 `fetch manifest zod@4.4.3`。这是测试缓存预热缺口，不是 package.json 缺少依赖；修复没有手工复制 `node_modules`。冷缓存首次仍需要 registry 一次，预热后的 profile 安装不发起 HTTP 请求。
+
 发布收口 tarball 结果：
 
 | 项 | 值 |
 | --- | ---: |
 | 文件数 | 139 |
-| packed size | 130,447 bytes（commit 08d41b0 的 gate） |
-| unpacked size | 约 481 KB |
+| packed size | 130,527 bytes（commit 72b76b2 的 gate） |
+| unpacked size | 481,319 bytes |
 
 包含：`lib`（js/d.ts/map）、`migrations/001_initial.sql`、`cordis.patch.yml`、根文档、`docs/`（ADR、阶段报告、发布清单）、`examples/`（两个 ingest 与 README）。
 
@@ -180,7 +182,7 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - `node:sqlite` 仍标记 Experimental；本机仅在 macOS arm64 + Node 22.22.0/24.21.0 环境验证。
 - 当前云同步工作副本的本地 mode 不可靠；commit f6a65be 把索引规范为 77 个 100644 + 1 个 100755，随后 tarball gate 新增文件，当前 HEAD 为 79 个 100644 + 2 个 100755（两个直接执行的验证脚本）。普通 checkout 仍需复核。
 - 当前 Git 历史仍包含早期文档中的本机绝对路径；当前文件已脱敏，但历史需要用户决定接受/重写/新历史。
-- package-lock 已在发布收口重新生成（lockfileVersion 3，含 peer 条目），并从 git archive 干净副本执行 `npm ci` 通过；完全断网安装仍未证明。
+- package-lock 已在发布收口重新生成（lockfileVersion 3，含 peer 条目），并从全新 clone / git archive 干净副本执行 `npm ci` 通过。冷缓存首次需要 npm registry 提供依赖；tarball profile 安装由门禁预热 zod cache 后以 `--offline` 执行；完全断网的一次性安装仍未证明。
 
 ## 4. 未完成 / 发布门禁
 
@@ -190,7 +192,7 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 4. Git 历史中的本地路径处理（接受/重写/新历史）；文件 mode 已在 f6a65be 规范化。
 5. 备份加密、保留策略与恢复演练。
 6. 并发写、多进程、真实长文本、云同步目录下的 WAL 行为。
-7. 若要发布 npm：移除 `private`，确认包名，跑 `npm publish --dry-run` 与最终发布审计；lockfile/`npm ci` 已在本地缓存条件下验证。
+7. 若要发布 npm：移除 `private`，确认包名，跑 `npm publish --dry-run` 与最终发布审计；lockfile/`npm ci` 已在全新 clone + 新 cache 条件下验证，冷缓存首次仍需 registry。
 8. v0.2 候选：归档/降权阈值、跨 namespace 关系、createMemory 幂等、cursor 分页、向量检索、自动 consolidation。
 
 ## 5. 验收结论
@@ -200,4 +202,4 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - 两个消费者示例独立通过自测，证明公共 API 可被外部插件复用。
 - 47/47 测试通过；整体行/分支/函数覆盖率 95.80%/85.07%/94.72%。
 - npm pack dry-run 内容干净；包仍 private，未发布。
-- 公开发布仍被许可证、Windows 验证、历史路径处理与备份策略阻塞；tarball 门禁与文件模式已完成。
+- 公开发布仍被许可证、Windows 验证、历史路径处理与备份策略阻塞；tarball 门禁、依赖缓存预热与文件模式已完成。

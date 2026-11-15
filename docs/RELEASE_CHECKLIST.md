@@ -11,12 +11,14 @@ candidate, not a public release. Complete the decisions below before changing th
 - [x] Isolated DSH_HOME mount: ctx.memoryCore create/get/search/feedback/close, restart
       persistence, clean close with no WAL/SHM; real profile untouched.
 - [x] Both examples pass --selftest.
-- [x] Clean dependency install from a git-archive copy: npm ci exit 0 using the local npm cache.
+- [x] Clean dependency install from a fresh clone: npm ci exit 0 with a fresh cache (registry available).
 - [x] Real npm tarball, not only --dry-run: packed from a clean copy, installed into a fresh
       temporary DSH_HOME profile, and the same mount probe passed (create/read/search/feedback,
-      restart persistence, clean close).
-- [x] Tarball contents: 139 entries, all files mode 0644; packed size about 130.4 KB; no database, WAL/SHM, tests,
-      node_modules, cache, log, secret, token, or personal absolute path.
+      restart persistence, clean close). The profile install prewarms zod with npm cache add
+      and then runs npm install --offline; no dependency is copied by hand.
+- [x] Tarball contents: 139 entries, all files mode 0644; packed size 130,527 bytes at
+      commit 72b76b2 (docs-only changes may shift this by tens of bytes); no database, WAL/SHM,
+      tests, node_modules, cache, log, secret, token, or personal absolute path.
 - [x] Tracked file modes normalized in commit f6a65be (77 files 100644 plus one directly
       executed mount script 100755); after adding the tarball gate the current HEAD has
       79 files 100644 and two directly executed verification scripts 100755.
@@ -25,6 +27,9 @@ candidate, not a public release. Complete the decisions below before changing th
 - [x] Git history audit: no binary blobs, databases, logs, secrets, or tokens. Earlier commits
       retain two local absolute workspace paths; see below.
 - [x] No real DSH profile was written and no existing plugin was modified.
+- [x] Fresh-clone acceptance at commit 72b76b2: npm ci, typecheck, npm test (47/47),
+      test:examples, and test:tarball all exit 0; the tarball gate re-ran the isolated mount,
+      restart persistence, and clean close.
 
 Reproduce:
 
@@ -40,19 +45,21 @@ npm pack --dry-run
 
 test:tarball runs from git archive HEAD, validates tarball modes and content, then installs that
 tarball into an isolated DSH_HOME and repeats the mount probe. It requires a local DSH app.
-The current run used node:sqlite and npm's local cache; it does not prove a completely offline
-install on another machine.
+The gate prewarms zod with npm cache add (so the cold cache needs the npm registry once) and
+then runs the profile install with --offline. This proves repeatable installation from the
+npm tarball without hand-copying dependencies, but it does not prove a completely offline
+first-run install on a machine with an empty cache.
 
 ## Required decisions before public release
 
-- [ ] Choose a license: MIT (short, permissive, no explicit patent grant) or Apache-2.0
-      (longer, includes an explicit patent grant). Do not describe the project as open source
-      until a LICENSE file is present. Files to change: LICENSE, package.json (license),
+- [ ] Confirm a license. Recommended: MIT (short, permissive, no explicit patent grant);
+      Apache-2.0 if an explicit patent grant is required. Do not describe the project as open
+      source until a LICENSE file is present. Files to change: LICENSE, package.json (license),
       README License section; Apache-2.0 may also need NOTICE.
-- [ ] Decide how to handle the two local absolute paths in earlier Git commits:
-      accept them, rewrite history with git filter-repo (force-push and re-coordinate clones),
-      or start a fresh history from the current tree. Do not rewrite pushed history without
-      explicit consent.
+- [ ] Decide how to handle the two local absolute paths in earlier Git commits.
+      Recommendation: accept and keep them; they are development paths, not credentials or
+      user data, and the current tree is redacted. Rewriting pushed history requires explicit
+      consent and re-coordinating all clones.
 - [ ] Keep "private": true unless actually publishing to npm. A public GitHub repository does
       not require an npm publish.
 - [ ] Choose a Windows policy: add CI/real-machine verification, or document Windows as
@@ -70,6 +77,8 @@ install on another machine.
 - No auth/encryption; namespaceId is not an authorization boundary.
 - Purge does not erase backups, WAL, snapshots, or cloud-sync version history.
 - Migration backups default to the last 3; they are not encrypted or off-site.
+- The tarball gate's cold cache needs the npm registry once for the zod packument and tarball;
+  after npm cache add, the profile install is offline.
 - Keyword search only; Chinese 2-character queries use O(n) LIKE fallback.
 - No HTTP/tool layer, automatic extraction, consolidation, vector search, or multi-agent sync.
 - Windows is unverified; no npm publish has been performed.
