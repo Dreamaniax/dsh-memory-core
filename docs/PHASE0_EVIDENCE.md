@@ -128,11 +128,11 @@ npm 默认缓存目录在沙箱下不可写；开发时使用：
 export npm_config_cache="$PWD/.tmp/npm-cache"
 ~~~
 
-## 7. 未验证项
+## 7. 未验证项（Phase 0 时点）
 
-- 自定义插件在真实 DSH profile 中的挂载（Sprint 4）。
+- ~~自定义插件在真实 DSH profile 中的挂载（Sprint 4）~~：Sprint 4 已在隔离 DSH_HOME 中完成真实挂载；未安装到真实 profile。
 - Windows/macOS 以外的平台。
-- 10k 性能基准（Sprint 3）。
+- ~~10k 性能基准（Sprint 3）~~：Sprint 3 已完成 10k 基准。
 - 多宿主进程并发写（设计覆盖，Sprint 1/3 测试）。
 - 中文分词/双索引（v0.2）。
 

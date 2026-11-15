@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 架构设计
 
-- 状态：Phase 1 收口；Sprint 1 storage foundation、Sprint 2 CRUD/provenance、Sprint 3 search/feedback 已实现（docs/SPRINT1_REPORT.md、docs/SPRINT2_REPORT.md、docs/SPRINT3_REPORT.md）；Sprint 4 Cordis/release 待实施
+- 状态：Phase 1 收口；Sprint 1 storage foundation、Sprint 2 CRUD/provenance、Sprint 3 search/feedback、Sprint 4 Cordis integration 已实现并通过隔离 DSH_HOME 挂载验证（docs/SPRINT1_REPORT.md、docs/SPRINT2_REPORT.md、docs/SPRINT3_REPORT.md、docs/SPRINT4_REPORT.md）；发布/许可证仍待确认
 - 依据：docs/PHASE0_INVESTIGATION.md
 - 范围：Local-first、进程内、SQLite + FTS5、无 LLM/网络依赖
 
@@ -105,10 +105,11 @@ DSH host process (Cordis Context)
 ### 3.7 Cordis Plugin Adapter
 
 - 一个宿主进程只挂载一个 Memory Core Service。
-- Service 名：**memoryCore**。
-- 生命周期：插件激活时打开库并迁移；ctx.effect 在卸载时 close。
-- 配置：path、journalMode、busyTimeoutMs、synchronous、autoMigrate、backupBeforeMigrate、limits。
+- Service 名：**memoryCore**；入口为包导出 `./plugin`，对应 `cordis.patch.yml` 的 `dsh-memory-core/plugin`。
+- 生命周期：插件激活时打开库并迁移；`ctx.effect` 在卸载时 close；重复 close 幂等。
+- 配置：path、journalMode、busyTimeoutMs、synchronous、backupBeforeMigrate、backupDir。默认数据库为 `$DSH_HOME/memory-core/memory.sqlite3`；空 path 不展开 `~`。
 - 失败策略：打开/迁移失败让插件激活失败，不静默降级到内存库。
+- 边界：v0.1 未实现 `autoMigrate` 或 `limits` 配置项；迁移总是执行，输入限制由 API 校验层固定。
 
 ## 4. 关键接口
 
@@ -254,7 +255,8 @@ Library 模式适合测试、CLI、迁移工具；生产插件应使用 Service�
 dsh-memory-core/
 ├── src/
 │   ├── index.ts                     # Library 公共导出
-│   ├── plugin.ts                    # Cordis Service 适配器（Sprint 4）
+│   ├── plugin.ts                    # Cordis Service 适配器
+│   ├── plugin-config.ts             # DSH_HOME/路径解析
 │   ├── api/
 │   │   ├── memory-api.ts            # 公共 API 门面
 │   │   ├── contracts.ts             # 输入/输出 DTO
@@ -293,7 +295,7 @@ dsh-memory-core/
 │   └── helpers/
 ├── benchmarks/
 │   └── 10k.mjs
-├── examples/                        # Sprint 4
+├── examples/
 │   ├── weekly-retro/
 │   └── prompt-optimizer/
 ├── docs/
@@ -303,6 +305,7 @@ dsh-memory-core/
 │   ├── SPRINT1_REPORT.md
 │   ├── SPRINT2_REPORT.md
 │   ├── SPRINT3_REPORT.md
+│   ├── SPRINT4_REPORT.md
 │   └── adr/
 ├── ARCHITECTURE.md
 ├── DATABASE_SCHEMA.md
@@ -312,7 +315,8 @@ dsh-memory-core/
 ├── package.json
 ├── tsconfig.json
 ├── tsconfig.build.json
-└── cordis.patch.yml                 # Sprint 4
+├── cordis.patch.yml                 # DSH bundle patch
+└── types/                           # 本地 peer 类型声明（不发布）
 ~~~
 
 与最初建议的 memory-store.test.ts / memory-search.test.ts 对应关系：测试按能力拆到 tests/integration 与 tests/unit，避免单文件过大；文件名可保留 database.test.mjs、crud.test.mjs、search.test.mjs 等。
@@ -388,7 +392,7 @@ dsh-memory-core/
 - FTS：显式 fts_rowid，避免 VACUUM 破坏 external content。
 - 反馈：request_hash 幂等；correct 必须 patch；working 必须有 expiresAt。
 
-仍需你确认的产品取舍（不阻塞 Sprint 4；v0.1 已实现范围不受影响）：
+仍需你确认的产品取舍（不阻塞 v0.1 已实现范围）：
 
 1. 备份保留 3 份、是否加密。
 2. 归档/降权的默认阈值（v0.2，不在 v0.1）。
@@ -397,3 +401,10 @@ dsh-memory-core/
 5. 分页是否在 v0.2 改为 opaque cursor（v0.1 用 offset）。
 
 完整审批清单见 IMPLEMENTATION_PLAN.md 第 10 节。
+
+## 13. Sprint 4 集成结论
+
+- 真实挂载：隔离 `DSH_HOME` 中启动 DSH 0.2.2-rc.3，probe 插件通过 `inject: ['memoryCore']` 获取服务，完成 create/get/search/feedback/close；重启后读取同一 memoryId，证明持久化。
+- 干净关闭：写阶段关闭后再次调用返回失败，数据库目录无残留 `-wal`/`-shm`；DB 位于默认 `$DSH_HOME/memory-core/memory.sqlite3`。
+- 包入口：`./plugin` 子路径和 `dsh.bundle.patch` 均被 loader 接受；验证过程未写入真实 `~/.dsh` profile。
+- 限制：Node `node:sqlite` 仍为 Experimental；本机仅验证 macOS arm64，Windows 未验证；服务不做授权，namespace 不是安全边界。

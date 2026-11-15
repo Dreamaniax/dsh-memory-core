@@ -15,6 +15,11 @@
     "outDir": "lib",
     "rootDir": "src",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@deepseek-ai/cordis": ["./types/cordis.d.ts"],
+      "@deepseek-ai/schemastery": ["./types/schemastery.d.ts"]
+    },
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },

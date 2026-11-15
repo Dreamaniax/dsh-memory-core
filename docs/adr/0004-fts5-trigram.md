@@ -1,6 +1,6 @@
 # ADR 0004 — FTS5 trigram 主路径 + 短查询 LIKE 回退
 
-- 状态：Proposed（待批准）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 
 ## 背景

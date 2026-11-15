@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 安全与隐私设计
 
-- 状态：Draft，待批准
+- 状态：v0.1 已实现；威胁模型与限制已按 Sprint 4 验证结果更新
 - 适用：宿主侧 Cordis Service + Library
 - 数据：长期记忆正文、来源元数据、版本历史、用户反馈
 
@@ -99,3 +99,29 @@
 8. 迁移失败回滚；外来库/未来版本拒绝。
 9. 并发 version 冲突；busy 重试。
 10. 关闭后调用返回 CLOSED，无连接泄漏。
+
+## 10. DSH 集成与运行配置
+
+- 默认数据库：`$DSH_HOME/memory-core/memory.sqlite3`；目录 0700、文件 0600。
+- 插件配置可覆盖 `path`、journalMode、busyTimeoutMs、synchronous、backupBeforeMigrate、backupDir；配置本身由 DSH profile 管理，不写入数据库。
+- 打开/迁移失败会让插件激活失败；不会回退到内存库或静默重建。
+- 真实 `~/.dsh` profile 不得作为测试目录；Sprint 4 挂载测试使用临时 `DSH_HOME`，验证后删除。
+- 同一宿主进程只应挂载一个 `memoryCore`；多实例会竞争同一 SQLite 文件。
+
+### 备份恢复操作
+
+1. 停止 DSH 或先关闭 Service，确保没有活跃写事务。
+2. 保留当前数据库文件；把已验证的备份放到配置的数据库路径。
+3. 确认同目录没有遗留 `-wal`/`-shm`，再启动。
+4. 启动后调用 `healthCheck()`，确认 integrity、foreign keys、FTS integrity 均为 ok。
+5. 如恢复失败，回退到保留的当前文件；不要把损坏库静默替换为空库。
+
+## 11. v0.1 明确不做 / 残余风险
+
+- 无认证/授权：`namespaceId` 只是隔离，不是安全边界；同进程插件默认互信。
+- 无加密、无密钥管理、无安全擦除；文件权限与磁盘加密由宿主负责。
+- `purgeMemory` 不清理历史备份、WAL、文件系统快照或 OneDrive 版本历史。
+- 备份默认保留 3 份（迁移前备份），不自动上传/异地保存；备份含敏感正文。
+- `node:sqlite` 仍为 Experimental；升级 Node 必须重跑测试与挂载验证。
+- 仅验证 macOS arm64；Windows 未验证；WAL 不适合网络盘。
+- 无 HTTP/工具层；若未来暴露，必须另做认证/授权/审计，不能直接复用 namespace。

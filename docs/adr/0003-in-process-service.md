@@ -1,6 +1,6 @@
 # ADR 0003 — 进程内 Cordis Service + 可独立 Library
 
-- 状态：Proposed（待批准）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 
 ## 背景
@@ -23,3 +23,4 @@ DSH 宿主插件共享同一个 Cordis Context/进程；服务可通过 ctx.inje
 
 - 消费者通过 ctx.memoryCore 使用；测试通过 Library。
 - 多宿主进程共享 DB 时依赖 SQLite 锁与 version 乐观锁；无跨进程事件。
+- Sprint 4 已在隔离 DSH_HOME 中验证 Service 生命周期、重启持久化与关闭清理。

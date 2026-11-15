@@ -1,6 +1,6 @@
 # ADR 0007 — 包入口：Library 根入口 + ./plugin 子路径
 
-- 状态：Proposed（待批准）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 
 ## 背景
@@ -22,5 +22,5 @@
 
 ## 后果
 
-- 需要 Sprint 4 真实验证子路径加载。
-- 消费者文档明确两个入口。
+- Sprint 4 已在隔离 DSH_HOME 中真实验证：dsh-memory-core/plugin 通过 ./plugin 子路径加载，ctx.memoryCore 可用。
+- 消费者文档明确两个入口：根 Library 与 ./plugin。

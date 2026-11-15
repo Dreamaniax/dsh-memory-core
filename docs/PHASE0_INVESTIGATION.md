@@ -3,7 +3,7 @@
 - 状态：待用户批准（Phase 0/1 收口）
 - 调查日期：2026-11-14
 - 调查对象：DSH Desktop 0.2.2-rc.3（Electron 44.7.0 / Node 24.21.0 / pnpm 11.28.5）
-- 工作目录：/Users/dreamania/Library/CloudStorage/OneDrive-Personal/RA/dsh-memory-core
+- 工作目录：<repo root>（本机为 OneDrive 同步目录）
 - 结论置信度：代码与运行时证据充分；尚未在本机启动一个自定义插件做端到端挂载，该验证放在 Sprint 4 验收。
 
 ## 1. 一句话结论
@@ -173,7 +173,7 @@ DSH 有完整的 **ctx.storage** / **ctx.storageDomain**：
 - 项目目录在 OneDrive 同步盘；**数据库不应放在项目目录**，必须放 $DSH_HOME 或临时测试目录，避免同步盘锁与 WAL 问题。
 - DSH 桌面版 Node 24.21；CLI 可能使用 Node 22.19+；代码需兼容 >= 22.19。
 - node:sqlite 仍标记 Experimental，API 可能变化；用薄驱动层隔离。
-- 插件加载器对子路径入口（dsh-memory-core/plugin）的支持尚未实测；Sprint 4 必须做真实挂载验证。若不支持，回退方案是把根入口做成插件、库入口改为子路径，或提供独立 wrapper 包。
+- 插件加载器对子路径入口（dsh-memory-core/plugin）的支持已在 Sprint 4 实测：隔离 DSH_HOME 中 loader 接受 `./plugin`，`ctx.memoryCore` 可用；回退方案未启用。
 
 ## 7. 技术选型对比
 
@@ -194,7 +194,7 @@ DSH 有完整的 **ctx.storage** / **ctx.storageDomain**：
 2. 永久删除是否级联 feedback/versions？**已收口：purgeMemory 级联；备份可能仍保留（ADR 0009）。**
 3. namespace 只是隔离标识，不是认证；**已接受；文档与 API 明确不把 namespace 当鉴权。**
 4. 中文检索 trigram + 短查询 LIKE 回退？**已收口：v0.1 采用，文档明示限制。**
-5. 包名与入口 dsh-memory-core + ./plugin 是否被 loader 接受？**未验证；Sprint 4 真实挂载验收，失败则回退 wrapper/根入口。**
+5. 包名与入口 dsh-memory-core + ./plugin 是否被 loader 接受？**已验证：Sprint 4 隔离 DSH_HOME 真实挂载通过，回退方案未启用。**
 6. 是否在 v0.1 暴露 HTTP/LLM 工具？**已收口：不暴露，只做 Service + Library。**
 7. 是否修改 weekly-retro 现有插件？**已收口：只提供 examples，不改现有插件。**
 8. 数据库默认目录？**已收口：$DSH_HOME/memory-core/memory.sqlite3。**

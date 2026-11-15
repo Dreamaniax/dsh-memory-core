@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — 实施计划与验收
 
-- 状态：Phase 0/1 已收口；Sprint 1、Sprint 2、Sprint 3 已完成；Sprint 4（Cordis 集成与发布）待实施
+- 状态：Phase 0/1 已收口；Sprint 1、Sprint 2、Sprint 3、Sprint 4（Cordis 集成与发布准备）已完成；代码/测试/隔离挂载已验证，许可证与公开发布仍待确认
 - 原则：小步可验证；每阶段有验收命令、证据、回滚点；不修改无关现有插件
 - 依据：docs/PHASE0_INVESTIGATION.md、ARCHITECTURE.md、DATABASE_SCHEMA.md、API_REFERENCE.md
 
@@ -209,6 +209,15 @@ npm pack --dry-run
 - 所有集成测试使用临时 DSH_HOME，不碰真实 profile。
 - 如果 loader 不支持 ./plugin 子路径，回退：根入口改为插件、库入口改为 ./core，或增加 wrapper 包；先改 ADR/文档再改代码。
 
+### 实现结果（已完成）
+
+- 入口：根 Library 入口保留；新增 `./plugin` 与 `cordis.patch.yml`；默认 DB `$DSH_HOME/memory-core/memory.sqlite3`。
+- 挂载：`bash tests/integration/dsh-boot-verify.sh` exit 0；隔离 DSH_HOME 中 probe 通过 `ctx.memoryCore` 完成 create/get/search/feedback/close，重启读取同一 memoryId，干净关闭无 WAL/SHM；测试未写入真实 profile。
+- 示例：`node examples/weekly-retro/ingest.mjs --selftest`、`node examples/prompt-optimizer/ingest.mjs --selftest` 均 exit 0。
+- 包审计：`npm pack --dry-run` 138 files / 约 125.6 KB packed；无 DB/tests/临时数据/密钥。
+- 测试：47/47 通过；lines 95.80%、branches 85.07%、functions 94.72%。
+- 仍未完成：License 决策、tarball 安装门禁、npm 发布、Windows 验证、备份加密/保留策略、仓库历史中的本机路径清理（公开前）。详见 docs/SPRINT4_REPORT.md。
+
 ## 6. 测试矩阵（映射用户 11 项要求）
 
 | # | 要求 | 测试文件 | 关键断言 |
@@ -307,6 +316,7 @@ npm pack --dry-run
 - Sprint 1：**完成**。SqliteStore、迁移、001 Schema、备份、13 项测试通过；详见 docs/SPRINT1_REPORT.md。
 - Sprint 2：**完成**。contracts/validation/errors、repositories、MemoryManager、MemoryApi、来源追踪、namespace 隔离、版本快照、软删除/purge；23 项集成测试通过；详见 docs/SPRINT2_REPORT.md。
 - Sprint 3：**完成**。FTS5 trigram + 短查询 LIKE 回退、BM25、snippet、type/status/namespace/expiry 过滤；confirm/correct/reject/flag、requestHash 幂等、版本快照同事务、软删除历史、purge 级联；43 项测试通过；详见 docs/SPRINT3_REPORT.md。
-- 生产代码：CRUD + provenance + search/feedback 可用；Cordis Service/真实挂载在 Sprint 4。
-- 自动化测试：43 项通过；整体 lines 95.75%、branches 84.79%、functions 94.63%；核心 service 行/函数 >=85%。
-- 下一步：Sprint 4（Cordis 插件、隔离 DSH_HOME 挂载验证、示例、发布清单、许可证决策）。
+- Sprint 4：**完成（发布准备）**。Cordis `memoryCore` Service、`./plugin`、`cordis.patch.yml`、隔离 DSH_HOME 真实挂载、两个独立示例、npm pack 审计；47 项测试通过；详见 docs/SPRINT4_REPORT.md。
+- 生产代码：CRUD + provenance + search/feedback + DSH Service 可用。
+- 自动化测试：47 项通过；整体 lines 95.80%、branches 85.07%、functions 94.72%；核心 service 行/函数 >=85%。
+- 下一步：License 决策、公开/发布审计（历史路径、文件模式、Windows）、v0.2 backlog。

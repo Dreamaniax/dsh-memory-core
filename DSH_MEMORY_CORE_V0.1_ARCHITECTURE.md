@@ -11,7 +11,7 @@
 
 ## 1. Repository discovery and decision gate
 
-At inspection time, `/Users/dreamania/Documents/ChatGPT/DSH & agent practise` contained no implementation repository or project files. It was not a Git repository and had no source files, manifests, lockfiles, test configuration, plugin interfaces, or runtime metadata. This specification is the only file subsequently added. Therefore:
+At inspection time, the initial workspace contained no implementation repository or project files. It was not a Git repository and had no source files, manifests, lockfiles, test configuration, plugin interfaces, or runtime metadata. This specification is the only file subsequently added. Therefore:
 
 - No existing implementation language, package manager, database driver, or test framework can be truthfully selected yet.
 - This document defines language-neutral boundaries and an executable discovery gate.

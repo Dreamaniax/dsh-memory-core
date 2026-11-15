@@ -1,6 +1,6 @@
 # ADR 0008 — Namespace-scoped identity (namespace_id, id)
 
-- 状态：Proposed（本轮采纳为 Sprint 1 默认；如否决需在落库前提出）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 - 关联：DATABASE_SCHEMA.md、API_REFERENCE.md、ADR 0006
 

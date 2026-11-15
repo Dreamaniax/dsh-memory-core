@@ -1,6 +1,6 @@
 # ADR 0009 — 状态变更只走反馈；软删除与永久删除分离
 
-- 状态：Proposed（本轮采纳为 Sprint 1 默认）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 - 关联：API_REFERENCE.md、ADR 0006、ADR 0008
 

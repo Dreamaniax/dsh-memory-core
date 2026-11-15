@@ -1,6 +1,7 @@
 {
   "name": "dsh-memory-core",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "description": "Reusable local-first long-term memory infrastructure for DSH plugins (SQLite + FTS5).",
   "main": "lib/index.js",
@@ -9,6 +10,10 @@
     ".": {
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
+    },
+    "./plugin": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./lib/plugin.js"
     },
     "./package.json": "./package.json"
   },
@@ -20,7 +25,9 @@
     "ARCHITECTURE.md",
     "DATABASE_SCHEMA.md",
     "API_REFERENCE.md",
-    "IMPLEMENTATION_PLAN.md"
+    "IMPLEMENTATION_PLAN.md",
+    "cordis.patch.yml",
+    "examples"
   ],
   "engines": {
     "node": ">=22.19.0"
@@ -28,12 +35,26 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/unit/query-builder.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
-    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/unit/query-builder.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
-    "benchmark": "npm run build && node benchmarks/10k.mjs"
+    "test": "npm run build && node --test tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
+    "benchmark": "npm run build && node benchmarks/10k.mjs",
+    "test:examples": "npm run build && node examples/weekly-retro/ingest.mjs --selftest && node examples/prompt-optimizer/ingest.mjs --selftest",
+    "test:dsh": "npm run build && bash tests/integration/dsh-boot-verify.sh"
   },
   "dependencies": {
     "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.1.0",
+    "@deepseek-ai/schemastery": "~3.19.0"
+  },
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.2-rc.1"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
   },
   "devDependencies": {
     "@types/node": "24.19.2",

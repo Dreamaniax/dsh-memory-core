@@ -1,6 +1,6 @@
 # ADR 0001 — TypeScript ESM + tsc
 
-- 状态：Proposed（待批准）
+- 状态：Accepted（v0.1 已实现并验证）
 - 日期：2026-11-14
 
 ## 背景

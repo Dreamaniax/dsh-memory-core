@@ -1,6 +1,6 @@
 # DSH Memory Core v0.1 — API Reference / 契约
 
-- 状态：Phase 1 契约收口；Sprint 1 SQLite/Schema、Sprint 2 CRUD/provenance、Sprint 3 search/feedback 已实现；Cordis Service 在 Sprint 4 接线
+- 状态：Phase 1 契约收口；Sprint 1 SQLite/Schema、Sprint 2 CRUD/provenance、Sprint 3 search/feedback、Sprint 4 Cordis Service 已实现并通过隔离 DSH_HOME 挂载验证
 - 传输：进程内 TypeScript API（无 HTTP）；Cordis 服务名 memoryCore
 - 身份：**namespace-scoped identity**；一条记忆的身份是 (namespaceId, id)
 - 错误：抛出 MemoryError（稳定 code），不使用模糊 null 表示失败
@@ -376,6 +376,33 @@ export interface FeedbackResult {
 - healthCheck：integrity_check、foreign_key_check、FTS integrity-check、schema/application_id/PRAGMA 状态。
 - close：幂等；活跃事务中抛错（同步驱动无法等待）；关闭后调用返回 CLOSED。
 
+### 3.12 Cordis Service（DSH）
+
+包导出：
+
+- `dsh-memory-core`：Library 入口，导出 `openMemoryCore`、类型与错误。
+- `dsh-memory-core/plugin`：Cordis Service 入口，默认导出 `MemoryCoreService`。
+
+Service 契约：
+
+- 服务名：`ctx.memoryCore`，实现完整 `MemoryApi`。
+- 插件激活时打开数据库并执行迁移；打开/迁移失败使激活失败，不降级到内存库。
+- `ctx.effect` 在插件卸载时调用 `close()`；`close()` 幂等。
+- 配置：`path`、`journalMode`、`busyTimeoutMs`、`synchronous`、`backupBeforeMigrate`、`backupDir`。
+- 默认路径：`$DSH_HOME/memory-core/memory.sqlite3`；`path` 为空时使用默认值，不展开 `~`。
+- bundle patch：`cordis.patch.yml` 插入 id `dsh-memory-core`、name `dsh-memory-core/plugin`。
+
+消费者只 `inject` 服务，不负责关闭：
+
+~~~ts
+ctx.inject(['memoryCore'], (ctx) => {
+  const memory = ctx.memoryCore
+  // await memory.searchMemories(...)
+})
+~~~
+
+未初始化或已关闭时调用会抛错；生命周期由宿主管理。多租户授权不在 v0.1 Service 内，namespace 不是认证边界。
+
 ## 4. 错误契约
 
 ~~~ts
@@ -583,7 +610,7 @@ await core.createMemory({
 - addMemoryFeedback 是 submitFeedback 的兼容别名。
 - archiveMemory 不单独实现；软删除 + status=deleted 覆盖归档语义；可恢复归档在 v0.2 设计。
 - deleteMemory 只做软删除；purgeMemory 是独立特权操作。
-- v0.1 不提供 HTTP 路由、LLM tool、向量检索、自动抽取、自动巩固。
+- v0.1 不提供 HTTP 路由、LLM tool、向量检索、自动抽取、自动巩固；Cordis 集成只提供进程内 `ctx.memoryCore`。
 - namespace 是数据隔离标识，不是认证；多租户场景必须在可信边界做授权。
 
 ## 9. 错误到 HTTP/工具层的映射（未来）
