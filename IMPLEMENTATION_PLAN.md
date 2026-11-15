@@ -189,11 +189,12 @@ node benchmarks/10k.mjs > .tmp/bench-10k.json
 ### 验收命令
 
 ~~~bash
-npm run build
-node --test tests/unit tests/integration
-bash tests/integration/dsh-boot-verify.sh
-node examples/weekly-retro/ingest.mjs --selftest
-node examples/prompt-optimizer/ingest.mjs --selftest
+npm run typecheck
+npm test
+npm run test:coverage
+npm run test:examples
+npm run test:dsh
+npm run test:tarball
 npm pack --dry-run
 ~~~
 
@@ -214,9 +215,10 @@ npm pack --dry-run
 - 入口：根 Library 入口保留；新增 `./plugin` 与 `cordis.patch.yml`；默认 DB `$DSH_HOME/memory-core/memory.sqlite3`。
 - 挂载：`bash tests/integration/dsh-boot-verify.sh` exit 0；隔离 DSH_HOME 中 probe 通过 `ctx.memoryCore` 完成 create/get/search/feedback/close，重启读取同一 memoryId，干净关闭无 WAL/SHM；测试未写入真实 profile。
 - 示例：`node examples/weekly-retro/ingest.mjs --selftest`、`node examples/prompt-optimizer/ingest.mjs --selftest` 均 exit 0。
-- 包审计：`npm pack --dry-run` 138 files / 约 125.6 KB packed；无 DB/tests/临时数据/密钥。
+- 包审计：`npm pack --dry-run` 139 files / 约 130.4 KB packed；无 DB/tests/临时数据/密钥。
+- 发布收口：真实 tarball 从干净副本打包并安装到隔离 DSH_HOME，挂载 probe 通过；文件模式规范为 77×100644 + 1×100755；`npm ci` 干净安装通过；详见 docs/RELEASE_READINESS.md。
 - 测试：47/47 通过；lines 95.80%、branches 85.07%、functions 94.72%。
-- 仍未完成：License 决策、tarball 安装门禁、npm 发布、Windows 验证、备份加密/保留策略、仓库历史中的本机路径清理（公开前）。详见 docs/SPRINT4_REPORT.md。
+- 仍未完成：License 决策、npm 发布、Windows 验证、备份加密/保留策略、Git 历史本机路径处理（公开前）、完全断网安装证明。详见 docs/RELEASE_READINESS.md。
 
 ## 6. 测试矩阵（映射用户 11 项要求）
 
@@ -317,6 +319,7 @@ npm pack --dry-run
 - Sprint 2：**完成**。contracts/validation/errors、repositories、MemoryManager、MemoryApi、来源追踪、namespace 隔离、版本快照、软删除/purge；23 项集成测试通过；详见 docs/SPRINT2_REPORT.md。
 - Sprint 3：**完成**。FTS5 trigram + 短查询 LIKE 回退、BM25、snippet、type/status/namespace/expiry 过滤；confirm/correct/reject/flag、requestHash 幂等、版本快照同事务、软删除历史、purge 级联；43 项测试通过；详见 docs/SPRINT3_REPORT.md。
 - Sprint 4：**完成（发布准备）**。Cordis `memoryCore` Service、`./plugin`、`cordis.patch.yml`、隔离 DSH_HOME 真实挂载、两个独立示例、npm pack 审计；47 项测试通过；详见 docs/SPRINT4_REPORT.md。
+- 发布收口：**完成私有候选包审计**。真实 tarball 安装 + 隔离挂载、文件模式规范化、干净 `npm ci`、当前树/历史 secrets 与路径审计；仍未公开/未 npm publish/未选许可证。详见 docs/RELEASE_READINESS.md。
 - 生产代码：CRUD + provenance + search/feedback + DSH Service 可用。
 - 自动化测试：47 项通过；整体 lines 95.80%、branches 85.07%、functions 94.72%；核心 service 行/函数 >=85%。
-- 下一步：License 决策、公开/发布审计（历史路径、文件模式、Windows）、v0.2 backlog。
+- 下一步：License 决策、Git 历史路径处理、Windows 验证、备份加密/恢复演练、npm publish 决策、v0.2 backlog。

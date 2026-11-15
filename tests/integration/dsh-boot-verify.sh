@@ -67,7 +67,13 @@ stop_server() {
 }
 
 run_dsh web --help >"$TMP/scaffold.log" 2>&1
-node "$ROOT/tests/integration/dsh-boot-prepare.mjs" "$ROOT" "$DSH_HOME"
+if [[ -n "${MEMORY_CORE_TARBALL:-}" ]]; then
+  echo "install mode: tarball ${MEMORY_CORE_TARBALL}"
+  node "$ROOT/tests/integration/dsh-boot-prepare.mjs" "$ROOT" "$DSH_HOME" "$MEMORY_CORE_TARBALL"
+else
+  echo "install mode: worktree copy"
+  node "$ROOT/tests/integration/dsh-boot-prepare.mjs" "$ROOT" "$DSH_HOME"
+fi
 
 start_server write "$TMP/write.log"
 wait_for_file "$EVIDENCE/write.json" "$TMP/write.log"

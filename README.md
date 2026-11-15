@@ -2,7 +2,7 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：v0.1.0 的 Sprint 1–4 已完成并通过隔离 DSH_HOME 挂载验证。47 项自动化测试通过，核心服务行/函数覆盖率 >=85%；验证过程未写入真实 DSH profile；包仍为 private，未发布 npm。
+> 状态：v0.1.0 的 Sprint 1–4 与发布收口已完成。47 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；包仍为 private，未发布 npm，许可证待定。
 >
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
@@ -195,11 +195,12 @@ npm test
 npm run test:coverage
 npm run test:examples
 npm run test:dsh          # 隔离 DSH_HOME 的真实挂载验证；需要本机 DSH app
+npm run test:tarball      # 从 git archive HEAD 干净构建 tarball，再安装到隔离 DSH_HOME 挂载
 npm run benchmark
 npm pack --dry-run        # 发布内容审计
 ~~~
 
-挂载测试会创建临时 `DSH_HOME`，安装本包与 probe 插件，启动 DSH，验证 `ctx.memoryCore` 的 create/get/search/feedback/close、重启持久化和干净关闭；默认不保留临时目录，设置 `KEEP_DSH_BOOT_ARTIFACTS=1` 可保留证据。它不会写真实 `~/.dsh`。
+挂载测试会创建临时 `DSH_HOME`，安装本包与 probe 插件，启动 DSH，验证 `ctx.memoryCore` 的 create/get/search/feedback/close、重启持久化和干净关闭；默认不保留临时目录，设置 `KEEP_DSH_BOOT_ARTIFACTS=1` 可保留证据。它不会写真实 `~/.dsh`。tarball 门禁使用 `git archive HEAD` 的干净副本（因此不要在未提交的工作区上把它当成最终证据），并校验 0644 文件模式、包内容和敏感路径；它需要本机 DSH app。
 
 ## 文档
 
@@ -216,6 +217,7 @@ npm pack --dry-run        # 发布内容审计
 - [Sprint 3 实施报告](docs/SPRINT3_REPORT.md)
 - [Sprint 4 实施与发布报告](docs/SPRINT4_REPORT.md)
 - [发布检查清单](docs/RELEASE_CHECKLIST.md)
+- [发布就绪审计（tarball/历史/许可证）](docs/RELEASE_READINESS.md)
 - [实施计划与验收](IMPLEMENTATION_PLAN.md)
 - ADRs：
   - [0001 TypeScript ESM](docs/adr/0001-typescript-esm.md)
@@ -251,4 +253,4 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 ## License
 
-TBD（建议 MIT，待确认；未声明 License 前不要对外声称开源或发布 npm）。
+TBD，待用户决定。候选是 MIT（最短、集成摩擦最低、无显式专利授权）或 Apache-2.0（含显式专利授权、文本更长）。未声明 License 前不要对外声称开源或发布 npm。选择后需要新增 LICENSE、在 package.json 声明 license，并更新本节。

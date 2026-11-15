@@ -120,7 +120,7 @@
 
 - 无认证/授权：`namespaceId` 只是隔离，不是安全边界；同进程插件默认互信。
 - 无加密、无密钥管理、无安全擦除；文件权限与磁盘加密由宿主负责。
-- `purgeMemory` 不清理历史备份、WAL、文件系统快照或 OneDrive 版本历史。
+- `purgeMemory` 不清理历史备份、WAL、文件系统快照或云同步版本历史。
 - 备份默认保留 3 份（迁移前备份），不自动上传/异地保存；备份含敏感正文。
 - `node:sqlite` 仍为 Experimental；升级 Node 必须重跑测试与挂载验证。
 - 仅验证 macOS arm64；Windows 未验证；WAL 不适合网络盘。

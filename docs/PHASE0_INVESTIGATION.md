@@ -3,7 +3,7 @@
 - 状态：待用户批准（Phase 0/1 收口）
 - 调查日期：2026-11-14
 - 调查对象：DSH Desktop 0.2.2-rc.3（Electron 44.7.0 / Node 24.21.0 / pnpm 11.28.5）
-- 工作目录：<repo root>（本机为 OneDrive 同步目录）
+- 工作目录：<repo root>（本机为云同步目录）
 - 结论置信度：代码与运行时证据充分；尚未在本机启动一个自定义插件做端到端挂载，该验证放在 Sprint 4 验收。
 
 ## 1. 一句话结论
@@ -170,7 +170,7 @@ DSH 有完整的 **ctx.storage** / **ctx.storageDomain**：
 
 - 已验证平台：macOS arm64（本机）。
 - 未验证平台：Windows x64。node:sqlite 是 Node 内置，理论上跨平台；但文件权限、路径、WAL 在 Windows/网络盘上的行为需要 CI 或实机验证。
-- 项目目录在 OneDrive 同步盘；**数据库不应放在项目目录**，必须放 $DSH_HOME 或临时测试目录，避免同步盘锁与 WAL 问题。
+- 项目目录在云同步盘；**数据库不应放在项目目录**，必须放 $DSH_HOME 或临时测试目录，避免同步盘锁与 WAL 问题。
 - DSH 桌面版 Node 24.21；CLI 可能使用 Node 22.19+；代码需兼容 >= 22.19。
 - node:sqlite 仍标记 Experimental，API 可能变化；用薄驱动层隔离。
 - 插件加载器对子路径入口（dsh-memory-core/plugin）的支持已在 Sprint 4 实测：隔离 DSH_HOME 中 loader 接受 `./plugin`，`ctx.memoryCore` 可用；回退方案未启用。

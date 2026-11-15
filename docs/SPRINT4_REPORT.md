@@ -3,7 +3,7 @@
 - 日期：2026-11-15
 - 状态：实现与隔离挂载验证完成；公开发布未完成
 - 范围：Cordis `memoryCore` Service、`./plugin` 入口、隔离 DSH_HOME 真实挂载、两个消费者示例、安装/配置/备份/安全文档、npm pack 内容审计
-- 不在范围：npm publish、许可证选择、Windows 实机验证、真实 DSH profile 安装、tarball 安装门禁、Git 历史重写
+- 不在范围（Sprint 4 当时）：npm publish、许可证选择、Windows 实机验证、真实 DSH profile 安装、tarball 安装门禁、Git 历史重写；其中 tarball 安装门禁与文件模式已在发布收口补齐，见 docs/RELEASE_READINESS.md
 - 基线：Sprint 3 的 43 项测试；Sprint 4 后 47 项测试
 
 ## 1. 本轮交付
@@ -36,7 +36,7 @@
 测试夹具与脚本：
 
 - `tests/integration/dsh-boot-verify.sh`：创建临时 DSH_HOME，调用 DSH CLI 生成 web profile，准备包与 probe，启动 `dsh web`，检查证据，清理进程与临时目录。
-- `tests/integration/dsh-boot-prepare.mjs`：把 `package.json`、`cordis.patch.yml`、`lib`、`migrations` 复制到 profile 的 `node_modules/dsh-memory-core`；复制 `zod` 与 probe；把 bundle 加入 profile；写入 probe 的 `cordis.patch.yml`。
+- `tests/integration/dsh-boot-prepare.mjs`：默认把 `package.json`、`cordis.patch.yml`、`lib`、`migrations` 复制到 profile 的 `node_modules/dsh-memory-core`；也支持把真实 tarball 安装到 profile；复制 probe；把 bundle 加入 profile；写入 probe 的 `cordis.patch.yml`。
 - `tests/fixtures/dsh-mount/probe/index.js`：真实 Cordis 插件，`inject: ['memoryCore']`，分 write/read 两阶段执行 create/get/search/feedback/health/close。
 - `tests/integration/check-dsh-evidence.mjs`：校验两阶段 JSON、同一 memoryId、health、关闭拒绝、默认 DB 路径、无 WAL/SHM 残留。
 - `tests/unit/plugin-config.test.mjs`（4 项）：DSH_HOME 优先、默认 `~/.dsh`、默认 DB 路径、显式 path 优先。
@@ -149,17 +149,21 @@ npm run test:examples
 
 ### 2.4 npm pack 内容审计
 
+Sprint 4 当时执行：
+
 ~~~bash
 npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 ~~~
 
-结果：
+发布收口后补充了真实 tarball 门禁：从 git archive HEAD 的干净副本 npm pack，安装到临时 DSH_HOME profile 并重跑挂载 probe；同时校验全部文件为 0644、无测试/数据库/缓存/密钥/个人路径。命令为 `npm run test:tarball`，详见 docs/RELEASE_READINESS.md。
+
+发布收口 tarball 结果：
 
 | 项 | 值 |
 | --- | ---: |
-| 文件数 | 138 |
-| packed size | 约 125.6 KB |
-| unpacked size | 约 470 KB |
+| 文件数 | 139 |
+| packed size | 130,396 bytes（commit 1902d0c 的 gate） |
+| unpacked size | 约 481 KB |
 
 包含：`lib`（js/d.ts/map）、`migrations/001_initial.sql`、`cordis.patch.yml`、根文档、`docs/`（ADR、阶段报告、发布清单）、`examples/`（两个 ingest 与 README）。
 
@@ -171,22 +175,22 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - 包保持 private；没有执行 npm publish。
 - `namespaceId` 是数据隔离，不是授权边界；服务不提供认证。
 - 没有加密；SQLite 文件权限由 Store 设为 0600，目录 0700。
-- purge 只删除当前数据库中的行；不会清除历史备份、WAL 快照、OneDrive/云同步版本历史或文件系统残留。
+- purge 只删除当前数据库中的行；不会清除历史备份、WAL 快照、云同步版本历史或文件系统残留。
 - 默认备份保留 3 份；备份位置与加密策略仍需产品决定。
 - `node:sqlite` 仍标记 Experimental；本机仅在 macOS arm64 + Node 22.22.0/24.21.0 环境验证。
-- 当前 OneDrive 工作副本中所有受版本控制文件被记为 100755；公开发布前应在普通 checkout 规范为 100644（脚本除外）。
-- 当前 Git 历史仍包含早期文档中的本机绝对路径；当前文件已脱敏，但历史需要重写或接受。
-- package-lock 的 peerDependencies 为离线手工补齐；未验证 `npm ci` 在无网络环境下的行为。
+- 当前云同步工作副本的本地 mode 不可靠；发布收口已在 commit f6a65be 把索引规范为 77 个 100644 + 1 个 100755，内容 diff 为 0。普通 checkout 仍需复核。
+- 当前 Git 历史仍包含早期文档中的本机绝对路径；当前文件已脱敏，但历史需要用户决定接受/重写/新历史。
+- package-lock 已在发布收口重新生成（lockfileVersion 3，含 peer 条目），并从 git archive 干净副本执行 `npm ci` 通过；完全断网安装仍未证明。
 
 ## 4. 未完成 / 发布门禁
 
 1. 许可证：MIT（短、宽松、无显式专利授权）或 Apache-2.0（更长、含显式专利授权）；未选择前不添加 LICENSE，不宣称 open source。
-2. tarball 安装门禁：`npm pack` 后在全新隔离 DSH_HOME 安装实际 tarball 再跑挂载 probe；本轮只做了 `--dry-run`。
+2. ~~tarball 安装门禁~~：已在发布收口完成；真实 tarball 安装到隔离 DSH_HOME 并通过挂载 probe。
 3. Windows 实机验证，或明确标注 unsupported/untested。
-4. Git 历史中的本地路径审计/重写；文件 mode 规范化。
+4. Git 历史中的本地路径处理（接受/重写/新历史）；文件 mode 已在 f6a65be 规范化。
 5. 备份加密、保留策略与恢复演练。
 6. 并发写、多进程、真实长文本、云同步目录下的 WAL 行为。
-7. 若要发布 npm：移除 `private`，补全 lockfile peer 条目，跑 `npm ci`、`npm pack`、tarball 安装与发布审计。
+7. 若要发布 npm：移除 `private`，确认包名，跑 `npm publish --dry-run` 与最终发布审计；lockfile/`npm ci` 已在本地缓存条件下验证。
 8. v0.2 候选：归档/降权阈值、跨 namespace 关系、createMemory 幂等、cursor 分页、向量检索、自动 consolidation。
 
 ## 5. 验收结论
@@ -196,4 +200,4 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - 两个消费者示例独立通过自测，证明公共 API 可被外部插件复用。
 - 47/47 测试通过；整体行/分支/函数覆盖率 95.80%/85.07%/94.72%。
 - npm pack dry-run 内容干净；包仍 private，未发布。
-- 公开发布仍被许可证、tarball 安装门禁、Windows 验证、历史路径与备份策略阻塞。
+- 公开发布仍被许可证、Windows 验证、历史路径处理与备份策略阻塞；tarball 门禁与文件模式已完成。
