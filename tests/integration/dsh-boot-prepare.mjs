@@ -8,6 +8,21 @@ if (!root || !dshHome) {
   process.exit(2)
 }
 
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+
+function runNpm(args, label, timeoutMs) {
+  const result = spawnSync(npmCommand, args, { encoding: 'utf8', timeout: timeoutMs })
+  if (result.error) {
+    throw new Error(label + ' failed: ' + result.error.message)
+  }
+  if (result.status !== 0) {
+    process.stderr.write(result.stdout ?? '')
+    process.stderr.write(result.stderr ?? '')
+    throw new Error(label + ' failed with status ' + result.status)
+  }
+  return result
+}
+
 const profileDir = join(dshHome, 'profiles', 'web')
 const modulesDir = join(profileDir, 'node_modules')
 const packageDir = join(modulesDir, 'dsh-memory-core')
@@ -18,8 +33,29 @@ mkdirSync(probeDir, { recursive: true })
 
 if (tarball) {
   const cache = process.env.MEMORY_CORE_NPM_CACHE ?? join(root, '.tmp', 'npm-cache')
-  const result = spawnSync(
-    'npm',
+
+  // npm ci with a lockfile caches the zod tarball but not necessarily the
+  // packument npm install needs to resolve it. Prime both through npm itself,
+  // then install offline so a slow registry cannot hang this gate. This is a
+  // normal npm cache population, not a hand-copied dependency.
+  runNpm(
+    [
+      'cache',
+      'add',
+      'zod@4.4.3',
+      '--cache',
+      cache,
+      '--prefer-offline',
+      '--fetch-retries=1',
+      '--fetch-timeout=30000',
+      '--no-audit',
+      '--no-fund',
+    ],
+    'npm cache add zod@4.4.3',
+    45000,
+  )
+
+  runNpm(
     [
       'install',
       tarball,
@@ -30,17 +66,19 @@ if (tarball) {
       '--ignore-scripts',
       '--no-audit',
       '--no-fund',
-      '--fetch-retries=5',
-      '--fetch-timeout=120000',
+      '--offline',
+      '--fetch-retries=0',
+      '--fetch-timeout=15000',
       '--cache',
       cache,
     ],
-    { encoding: 'utf8' },
+    'npm install tarball (offline)',
+    60000,
   )
-  if (result.status !== 0) {
-    process.stderr.write(result.stdout ?? '')
-    process.stderr.write(result.stderr ?? '')
-    throw new Error('npm install of tarball failed with status ' + result.status)
+
+  const zodManifest = JSON.parse(readFileSync(join(modulesDir, 'zod', 'package.json'), 'utf8'))
+  if (zodManifest.version !== '4.4.3') {
+    throw new Error('tarball install resolved zod ' + zodManifest.version + ', expected 4.4.3')
   }
 } else {
   const zodDir = join(modulesDir, 'zod')
@@ -78,11 +116,13 @@ writeFileSync(
 )
 
 const installed = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'))
+const zodInstalled = JSON.parse(readFileSync(join(modulesDir, 'zod', 'package.json'), 'utf8'))
 console.log(
   JSON.stringify({
     mode: tarball ? 'tarball' : 'worktree-copy',
     tarball: tarball ?? null,
     packageVersion: installed.version,
+    zodVersion: zodInstalled.version,
     profileDir,
   }),
 )
