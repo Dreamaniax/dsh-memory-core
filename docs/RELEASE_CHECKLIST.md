@@ -17,8 +17,9 @@ candidate, not a public release. Complete the decisions below before changing th
       restart persistence, clean close).
 - [x] Tarball contents: 139 entries, all files mode 0644; packed size about 130.4 KB; no database, WAL/SHM, tests,
       node_modules, cache, log, secret, token, or personal absolute path.
-- [x] Tracked file modes normalized in commit f6a65be: 77 files 100644 plus only the directly
-      executed mount script 100755; cached diff has zero content changes.
+- [x] Tracked file modes normalized in commit f6a65be (77 files 100644 plus one directly
+      executed mount script 100755); after adding the tarball gate the current HEAD has
+      79 files 100644 and two directly executed verification scripts 100755.
 - [x] Current tracked tree has no secret-like literal, private key, real user memory, session
       content, or local absolute path.
 - [x] Git history audit: no binary blobs, databases, logs, secrets, or tokens. Earlier commits

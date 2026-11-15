@@ -9,14 +9,14 @@
 
 | 门禁 | 状态 | 证据 |
 | --- | --- | --- |
-| 文件模式规范化 | 通过 | commit f6a65be，77 个文件 100644 + 1 个脚本 100755，内容 diff 为 0 |
+| 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；新增 tarball gate 后当前 HEAD 为 79×100644 + 2×100755（两个直接执行的验证脚本） |
 | 干净依赖安装 | 通过（本地缓存） | 从 git archive 的干净副本执行 npm ci，exit 0 |
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
 | 全量测试 | 通过 | 47 / 47，0 fail |
 | 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
 | 隔离 DSH_HOME 挂载 | 通过 | ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭 |
-| 真实 tarball 安装 + 挂载 | 通过 | npm pack 后安装到临时 profile，再运行同一挂载 probe；commit 1902d0c 上 memoryId 5b186440-0cbc-47d2-beb1-31867612349e |
+| 真实 tarball 安装 + 挂载 | 通过 | npm pack 后安装到临时 profile，再运行同一挂载 probe；commit 08d41b0 上 memoryId 1199e400-aac0-4b64-99d1-faf136479c52 |
 | tarball 内容审计 | 通过 | 139 个文件全部 0644；无数据库/测试/缓存/密钥/个人路径 |
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
 | Git 历史审计 | 有条件通过 | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径 |
@@ -36,12 +36,12 @@ npm install <tarball> --prefix <temp-profile-dir> --no-save --legacy-peer-deps \
 
 随后 DSH 从该临时 profile 启动，probe 通过 ctx.memoryCore 执行
 create/get/search/feedback/healthCheck/close；进程重启后读到同一 memoryId。commit
-1902d0c 上 tarball gate 的结果：
+08d41b0 上 tarball gate 的结果：
 
 ~~~json
 {
   "ok": true,
-  "memoryId": "5b186440-0cbc-47d2-beb1-31867612349e",
+  "memoryId": "1199e400-aac0-4b64-99d1-faf136479c52",
   "database": "<temp DSH_HOME>/memory-core/memory.sqlite3",
   "writeHits": 1,
   "feedbackTotal": 1
@@ -69,7 +69,7 @@ npm run test:tarball
 | --- | ---: |
 | 条目数 | 139 |
 | 文件数 | 139 |
-| packed size | 130,396 bytes（commit 1902d0c 的 gate） |
+| packed size | 130,447 bytes（commit 08d41b0 的 gate） |
 | unpacked size | 约 481 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |

@@ -162,7 +162,7 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 | 项 | 值 |
 | --- | ---: |
 | 文件数 | 139 |
-| packed size | 130,396 bytes（commit 1902d0c 的 gate） |
+| packed size | 130,447 bytes（commit 08d41b0 的 gate） |
 | unpacked size | 约 481 KB |
 
 包含：`lib`（js/d.ts/map）、`migrations/001_initial.sql`、`cordis.patch.yml`、根文档、`docs/`（ADR、阶段报告、发布清单）、`examples/`（两个 ingest 与 README）。
@@ -178,7 +178,7 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - purge 只删除当前数据库中的行；不会清除历史备份、WAL 快照、云同步版本历史或文件系统残留。
 - 默认备份保留 3 份；备份位置与加密策略仍需产品决定。
 - `node:sqlite` 仍标记 Experimental；本机仅在 macOS arm64 + Node 22.22.0/24.21.0 环境验证。
-- 当前云同步工作副本的本地 mode 不可靠；发布收口已在 commit f6a65be 把索引规范为 77 个 100644 + 1 个 100755，内容 diff 为 0。普通 checkout 仍需复核。
+- 当前云同步工作副本的本地 mode 不可靠；commit f6a65be 把索引规范为 77 个 100644 + 1 个 100755，随后 tarball gate 新增文件，当前 HEAD 为 79 个 100644 + 2 个 100755（两个直接执行的验证脚本）。普通 checkout 仍需复核。
 - 当前 Git 历史仍包含早期文档中的本机绝对路径；当前文件已脱敏，但历史需要用户决定接受/重写/新历史。
 - package-lock 已在发布收口重新生成（lockfileVersion 3，含 peer 条目），并从 git archive 干净副本执行 `npm ci` 通过；完全断网安装仍未证明。
 
