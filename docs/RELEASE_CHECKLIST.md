@@ -31,6 +31,29 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
       (memoryId 5253ff24-9230-4f26-aea0-1e0fbfe5179b), and test:tarball (memoryId
       8f7108a9-db51-43f6-a6fb-3caac5db8ce1) all exit 0; clone worktree clean.
 
+## Final public-source review (2026-11-16)
+
+- [x] Reviewed commit 81f9cd45d653e409b7a32e2d4eccaeab34678db4, tree
+      c0d9e9fb895a6762b1ef5dd9287d2d14a866cfc4; local main = origin/main = GitHub
+      refs/heads/main; worktree clean.
+- [x] Actual GitHub visibility: private; tags 0; releases 0; package.json private true.
+- [x] Fresh clean checkout: 82 tracked files, 80 x 100644 plus 2 x 100755; no mode drift.
+- [x] Fresh isolated npm cache: npm ci exit 0 (8 packages in 4s); typecheck exit 0;
+      npm test 47/47; coverage 95.80 / 85.07 / 94.72; examples exit 0.
+- [x] Real tarball gate at reviewed commit 81f9: exit 0; 136,056 bytes; 140 files;
+      requiredFiles 9; all 0644; forbiddenPaths 0; contentFindings 0; isolated mount
+      memoryId b27896bf-330c-44cd-92d3-2c44e6377570. The final documentation-tree gate
+      and tarball sha256 are recorded in the review report.
+- [x] History audit: 14 commits, 158 unique blobs, 0 binaries; no secrets, credentials,
+      databases, logs, emails, or real memory; only the two accepted early paths remain.
+- [x] Current tree audit: no actual personal path; the only path/token-like literals are
+      scanner regexes in tests/integration/check-tarball.mjs, excluded from the tarball.
+- [x] Independent report: reviews/FINAL_PUBLIC_REVIEW.md (repository-only; not in npm
+      tarball).
+- [ ] Windows and Linux unverified; fully offline cold-cache first-run unproven.
+- [ ] GitHub visibility switch, public Release/tag, and npm publish not performed and not
+      authorized.
+
 ## Verified baseline (2026-11-15, v0.1.0)
 
 - [x] TypeScript typecheck and build exit 0.
@@ -48,8 +71,9 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
       commit 542182d and 132,309 bytes at docs commit 864b693 (exact bytes vary with docs);
       no database, WAL/SHM, tests, node_modules, cache, log, secret, token, or personal path.
 - [x] Tracked file modes normalized in commit f6a65be (77 files 100644 plus one directly
-      executed mount script 100755); after adding the tarball gate the current HEAD has
-      79 files 100644 and two directly executed verification scripts 100755.
+      executed mount script 100755); after adding the tarball gate that baseline had
+      79 files 100644 and two directly executed verification scripts 100755. The final
+      candidate HEAD has 80 files 100644 plus the same two 100755 scripts.
 - [x] Current tracked tree has no secret-like literal, private key, real user memory, session
       content, or local absolute path.
 - [x] Git history audit: no binary blobs, databases, logs, secrets, or tokens. Earlier commits
