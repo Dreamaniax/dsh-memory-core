@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { mkdirSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { join } from 'node:path'
 import {
@@ -94,6 +95,40 @@ test('creates, reads, lists, updates and versions memories', async t => {
   assert.equal(versions.items[0].changedBy, 'tester')
   assert.equal(versions.items[0].changeReason, 'clarify scope')
   assert.equal(versions.items[0].snapshot.version, 2)
+})
+
+test('rejects a version snapshot that does not match its namespace and memory row', async t => {
+  const { api, path } = await withCore(t)
+  const created = await api.createMemory({
+    namespaceId: 'alpha',
+    type: 'semantic',
+    status: 'active',
+    content: 'integrity probe',
+  })
+  const db = new DatabaseSync(path)
+  try {
+    const snapshot = { ...created, namespaceId: 'beta', version: 99 }
+    db.prepare(
+      'INSERT INTO memory_versions (namespace_id, memory_id, version, snapshot_json, content_hash, change_type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).run('alpha', created.id, 99, JSON.stringify(snapshot), '0'.repeat(64), 'create', Date.now())
+  } finally {
+    db.close()
+  }
+  await expectCode(api.getMemoryVersions({ namespaceId: 'alpha', memoryId: created.id }), 'CORRUPT_DATABASE')
+})
+
+test('maps store open failures to a redacted public error', async t => {
+  const temp = await makeTempDir('dsh-memory-open-error-')
+  t.after(temp.cleanup)
+  const directory = join(temp.dir, 'not-a-database')
+  mkdirSync(directory)
+  await assert.rejects(openMemoryCore({ path: directory }), error => {
+    assert.equal(isMemoryError(error), true)
+    assert.equal(error.code, 'STORAGE_ERROR')
+    assert.equal(error.name, 'MemoryError')
+    assert.doesNotMatch(error.message, /not-a-database|SQL|unable to open/i)
+    return true
+  })
 })
 
 test('working memory requires a future expiry and starts unconfirmed', async t => {

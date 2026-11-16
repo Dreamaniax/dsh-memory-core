@@ -2,7 +2,7 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：v0.1.0 发布候选。Sprint 1–4 与发布收口已完成，47 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；包仍为 private、未发布 npm；Windows 未验证，不宣称支持。
+> 状态：v0.1.0 发布候选。Sprint 1–4 与发布收口已完成，50 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；包仍为 private、未发布 npm；Windows 未验证，不宣称支持。
 >
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
@@ -236,7 +236,7 @@ npm pack --dry-run        # 发布内容审计
 
 挂载测试会创建临时 `DSH_HOME`，安装本包与 probe 插件，启动 DSH，验证 `ctx.memoryCore` 的 create/get/search/feedback/close、重启持久化和干净关闭；默认不保留临时目录，设置 `KEEP_DSH_BOOT_ARTIFACTS=1` 可保留证据。它不会写真实 `~/.dsh`。tarball 门禁使用 `git archive HEAD` 的干净副本（因此不要在未提交的工作区上把它当成最终证据），并校验 0644 文件模式、包内容和敏感路径；它需要本机 DSH app。
 
-tarball 门禁会先用 `npm cache add zod@4.4.3` 预热测试 cache，再以 `--offline` 把 tarball 安装到临时 profile：冷缓存首次需要 npm registry 一次，预热后安装不发起 HTTP 请求；它不会手工复制 `node_modules`。若要在完全断网的 CI 中运行，先预热 `.tmp/npm-cache`。完整 tarball 证据与失败复现见 [发布就绪审计](docs/RELEASE_READINESS.md)。
+tarball 门禁会先用 `npm cache add zod@4.6.6` 预热测试 cache，再以 `--offline` 把 tarball 安装到临时 profile：冷缓存首次需要 npm registry 一次，预热后安装不发起 HTTP 请求；它不会手工复制 `node_modules`。若要在完全断网的 CI 中运行，先预热 `.tmp/npm-cache`。完整 tarball 证据与失败复现见 [发布就绪审计](docs/RELEASE_READINESS.md)。
 
 ## 文档
 
@@ -291,6 +291,6 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 本项目采用 [MIT License](LICENSE)。Copyright (c) 2026 Dreamaniax。
 
-运行时依赖 zod@4.4.3 为 MIT；包内不包含 TypeScript（Apache-2.0，仅构建期开发依赖，不随 tarball 分发）。package-lock 中记录的 @deepseek-ai/cordis 4.1.0、@deepseek-ai/cosmokit 1.9.0、@deepseek-ai/schemastery 3.19.0、@standard-schema/spec 1.1.0 与 undici-types 7.24.6 均为 MIT。未发现与 MIT 分发冲突的依赖许可；未来新增依赖时发布前重新审计。
+运行时依赖 zod@4.6.6 为 MIT；包内不包含 TypeScript（Apache-2.0，仅构建期开发依赖，不随 tarball 分发）。package-lock 中记录的 @deepseek-ai/cordis 4.1.0、@deepseek-ai/cosmokit 1.9.0、@deepseek-ai/schemastery 3.19.0、@standard-schema/spec 1.1.0 与 undici-types 7.24.6 均为 MIT。未发现与 MIT 分发冲突的依赖许可；未来新增依赖时发布前重新审计。
 
 包目前仍是 `private: true` 且未发布 npm；License 声明不代表已公开发布。

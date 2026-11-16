@@ -4,6 +4,7 @@
 - 仓库：Dreamaniax/dsh-memory-core（private）
 - 状态：v0.1.0 私有发布候选；**MIT License 已选定；未公开发布、未 npm publish、未切换仓库可见性**
 - 基线：Sprint 4 发布收口代码/门禁到 commit dd8c16c；本报告描述其后的候选变更
+- 安全更新（2026-11-16）：运行时 zod 从 4.4.3 升级到 4.6.6，修复 GHSA-mrhx-c7xc-m3w5；本文件中 4.4.3/47 项测试的早期门禁输出是历史记录，最新证据见 reviews/PRIVACY_SECURITY_AUDIT.md
 
 ## 1. 结论
 
@@ -12,8 +13,8 @@
 | 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；加入 LICENSE 后候选 HEAD 为 80×100644 + 2×100755（两个直接执行的验证脚本） |
 | 干净依赖安装 | 通过（全新 cache + registry） | 全新临时 clone 执行 npm ci，exit 0 |
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
-| 全量测试 | 通过 | 47 / 47，0 fail |
-| 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
+| 全量测试 | 通过 | 50 / 50，0 fail |
+| 覆盖率 | 通过 | 行 96.19% / 分支 85.85% / 函数 94.84%（最近一次全量运行） |
 | 许可证 | 通过（选定 MIT） | LICENSE + package.json `license: MIT` + README；依赖许可无冲突（见 §5） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
 | 隔离 DSH_HOME 挂载 | 通过 | 候选代码提交上 ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭；memoryId 889d83ce-17ba-4768-b941-1107f76f30cb |
@@ -31,7 +32,7 @@
 tests/integration/dsh-boot-prepare.mjs 执行；profile 安装前先显式预热 npm cache：
 
 ~~~bash
-npm cache add zod@4.4.3 --cache <repo>/.tmp/npm-cache \
+npm cache add zod@4.6.6 --cache <repo>/.tmp/npm-cache \
   --prefer-offline --fetch-retries=1 --fetch-timeout=30000 --no-audit --no-fund
 npm install <tarball> --prefix <temp-profile-dir> --no-save --legacy-peer-deps \
   --ignore-scripts --no-audit --no-fund --offline --fetch-retries=0 \
@@ -154,7 +155,7 @@ docs/、examples/。不包含：types/（仅编译期）、测试、数据库、
 
 | 包 | 版本 | 许可 | 与分发的关系 |
 | --- | --- | --- | --- |
-| zod | 4.4.3 | MIT | 运行时依赖；随 profile 安装，不在本包 tarball 内 |
+| zod | 4.6.6 | MIT | 运行时依赖；随 profile 安装，不在本包 tarball 内 |
 | @deepseek-ai/cordis | 4.1.0 | MIT | peer dependency，由 DSH 宿主提供 |
 | @deepseek-ai/schemastery | 3.19.0 | MIT | peer dependency，由 DSH 宿主提供 |
 | @deepseek-ai/cosmokit | 1.9.0 | MIT | 传递依赖 |

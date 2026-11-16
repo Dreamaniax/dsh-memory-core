@@ -47,16 +47,17 @@
 
 ## 4. 日志与错误
 
-- 默认不记录 memory content/title/metadata/query 原文。
-- 日志字段：event、code、namespaceId（可哈希）、memoryId（可哈希）、durationMs、rowCount。
+- v0.1 当前实现不输出应用日志，也没有遥测或调试日志开关；不记录 memory content/title/metadata/query 原文。
+- 未来若增加日志，字段必须限于 event、code、namespaceId（可哈希）、memoryId（可哈希）、durationMs、rowCount，不得加入正文或原始查询。
 - 错误 details 白名单：field、expectedVersion、actualVersion、requestId、limit、offset；不包含 content。
-- 底层 SQLite 错误在内部日志保留 cause；对外返回 STORAGE_ERROR/STORAGE_BUSY，不返回 SQL 文本或绝对路径。
-- 调试模式（显式配置）也不默认打印正文；如需，必须用户显式开启并自担风险。
+- 底层 SQLite 错误只作为 cause 保留在内部异常链；对外统一映射为 STORAGE_ERROR/STORAGE_BUSY/CORRUPT_DATABASE/MIGRATION_FAILED/CLOSED，不返回 SQL 文本或绝对路径。
+- 调试模式（未来若增加）也不得默认打印正文；如需，必须用户显式开启并自担风险。
 
 ## 5. 文件与备份
 
-- 数据目录：$DSH_HOME/memory-core，创建 0700；DB 文件 0600。
-- 备份文件 0600；临时文件同目录、同权限；成功后 rename。
+- 数据目录：$DSH_HOME/memory-core，创建时 0700；打开时也会把已有目录收紧到 0700。
+- DB 文件：创建时 0600；打开时也会把已有文件收紧到 0600；同目录 -wal/-shm 在首次连接前收紧为 0600。
+- 备份文件 0600；临时文件同目录、同权限；成功后 rename。POSIX 模式在 Windows 上可能不可用，此时只有 best-effort。
 - 备份含敏感正文；备份目录访问控制与磁盘加密由用户负责。
 - purgeMemory 不会清理历史备份；文档明示，提供备份保留 3 份与手动清理说明。
 - 不把 DB 放项目目录/同步盘；WAL 在网络盘上不可靠。
@@ -65,8 +66,8 @@
 
 - 软删除：status=deleted、deleted_at；默认查询/搜索排除；保留 audit。
 - 永久删除 purgeMemory：独立特权操作，要求 expectedVersion + confirmationToken=PURGE:<namespace>:<id>；级联 versions/memory_sources/memory_feedback；清理 autoCreated 孤儿 sources；共享 sources 保留。
-- 版本历史 append-only；UPDATE 触发器拒绝；DELETE 仅允许父行级联（授权 purge）。
-- 反馈 append-only；UPDATE 触发器拒绝；purge 随父行级联。
+- 版本历史 append-only；UPDATE 触发器拒绝。DELETE 由应用层只在父行 purge/级联时执行；直接 SQLite 访问拥有文件权限，可绕过 API，属于数据库信任边界而不是 API 保证。
+- 反馈 append-only；UPDATE 触发器拒绝；purge 随父行级联。直接 SQLite 访问同样可绕过 API。
 - 过期：expires_at 计算；不自动物理删除。
 - 不因久未使用自动永久删除；检索隐藏、可恢复归档、purge 是不同操作（见 CAPACITY_AND_EVOLUTION.md）。
 - 未来：保留策略、加密备份、安全擦除、恢复 API 需单独设计。
@@ -95,7 +96,7 @@
 4. 跨 namespace 读取/更新/删除/来源关联被拒绝。
 5. 错误 details/日志不含正文。
 6. purgeMemory 无 confirmationToken 被拒绝；级联清理正确；共享 source 保留。
-7. 备份权限 0600；备份 integrity_check；恢复流程可读。
+7. 备份权限 0600；已有目录/DB/WAL/SHM 打开后被收紧；备份 integrity_check；恢复流程可读。
 8. 迁移失败回滚；外来库/未来版本拒绝。
 9. 并发 version 冲突；busy 重试。
 10. 关闭后调用返回 CLOSED，无连接泄漏。
@@ -122,6 +123,7 @@
 - 无加密、无密钥管理、无安全擦除；文件权限与磁盘加密由宿主负责。
 - `purgeMemory` 不清理历史备份、WAL、文件系统快照或云同步版本历史。
 - 备份默认保留 3 份（迁移前备份），不自动上传/异地保存；备份含敏感正文。
+- 运行时依赖 zod 已从 4.4.3 升级到 4.6.6，修复 GHSA-mrhx-c7xc-m3w5（过大约束集合导致内存耗尽）；审计时 `npm audit --omit=dev` 为 0 漏洞，但没有持续在线漏洞扫描。
 - `node:sqlite` 仍为 Experimental；升级 Node 必须重跑测试与挂载验证。
 - 仅验证 macOS arm64；Windows 未验证；WAL 不适合网络盘。
 - 无 HTTP/工具层；若未来暴露，必须另做认证/授权/审计，不能直接复用 namespace。

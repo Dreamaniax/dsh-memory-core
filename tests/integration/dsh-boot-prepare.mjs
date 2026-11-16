@@ -42,7 +42,7 @@ if (tarball) {
     [
       'cache',
       'add',
-      'zod@4.4.3',
+      'zod@4.6.6',
       '--cache',
       cache,
       '--prefer-offline',
@@ -51,7 +51,7 @@ if (tarball) {
       '--no-audit',
       '--no-fund',
     ],
-    'npm cache add zod@4.4.3',
+    'npm cache add zod@4.6.6',
     45000,
   )
 
@@ -77,8 +77,8 @@ if (tarball) {
   )
 
   const zodManifest = JSON.parse(readFileSync(join(modulesDir, 'zod', 'package.json'), 'utf8'))
-  if (zodManifest.version !== '4.4.3') {
-    throw new Error('tarball install resolved zod ' + zodManifest.version + ', expected 4.4.3')
+  if (zodManifest.version !== '4.6.6') {
+    throw new Error('tarball install resolved zod ' + zodManifest.version + ', expected 4.6.6')
   }
 } else {
   const zodDir = join(modulesDir, 'zod')

@@ -37,15 +37,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
-    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
+    "test": "npm run build && node --test tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/permissions.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage tests/unit/query-builder.test.mjs tests/unit/plugin-config.test.mjs tests/integration/database.test.mjs tests/integration/migrations.test.mjs tests/integration/permissions.test.mjs tests/integration/memory-api.test.mjs tests/integration/search.test.mjs tests/integration/feedback.test.mjs",
     "benchmark": "npm run build && node benchmarks/10k.mjs",
     "test:examples": "npm run build && node examples/weekly-retro/ingest.mjs --selftest && node examples/prompt-optimizer/ingest.mjs --selftest",
     "test:dsh": "npm run build && bash tests/integration/dsh-boot-verify.sh",
     "test:tarball": "bash tests/integration/dsh-tarball-verify.sh"
   },
   "dependencies": {
-    "zod": "4.4.3"
+    "zod": "4.6.6"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.1.0",

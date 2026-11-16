@@ -73,7 +73,7 @@ if (manifest.private !== true) failures.push('package.json private is not true')
 if (manifest.license !== 'MIT') failures.push('package.json license is not MIT')
 if (manifest.exports?.['./plugin']?.default !== './lib/plugin.js') failures.push('missing ./plugin export')
 if (manifest.dsh?.bundle?.patch !== './cordis.patch.yml') failures.push('missing dsh.bundle.patch')
-if (manifest.dependencies?.zod !== '4.4.3') failures.push('unexpected or missing zod dependency')
+if (manifest.dependencies?.zod !== '4.6.6') failures.push('unexpected or missing zod dependency')
 
 const contentChecks = [
   ['local user path', /\/Users\/|\/home\/|OneDrive/],

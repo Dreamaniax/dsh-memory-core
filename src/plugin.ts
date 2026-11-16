@@ -21,6 +21,7 @@ import type {
   SubmitFeedbackInput,
   UpdateMemoryInput,
 } from './api/contracts.js'
+import { MemoryError } from './api/errors.js'
 import { openMemoryCore, type MemoryApi } from './api/memory-api.js'
 import type { BackupResult, HealthReport, JournalMode, SynchronousMode } from './storage/sqlite-store.js'
 import { resolveMemoryCorePath } from './plugin-config.js'
@@ -85,8 +86,8 @@ export class MemoryCoreService extends Service implements MemoryApi {
   }
 
   private get client(): MemoryApi {
-    if (this.closed) throw new Error('memoryCore service is closed')
-    if (!this.api) throw new Error('memoryCore service is not initialized')
+    if (this.closed) throw new MemoryError('CLOSED', 'memoryCore service is closed')
+    if (!this.api) throw new MemoryError('STORAGE_ERROR', 'memoryCore service is not initialized')
     return this.api
   }
 

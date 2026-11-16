@@ -1,7 +1,16 @@
 import { chmod, mkdir, open, stat } from 'node:fs/promises'
 
+async function chmodBestEffort(path: string, mode: number): Promise<void> {
+  try {
+    await chmod(path, mode)
+  } catch {
+    // Windows and some filesystems do not expose POSIX modes; best effort.
+  }
+}
+
 export async function ensurePrivateDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true, mode: 0o700 })
+  await chmodBestEffort(path, 0o700)
 }
 
 export async function ensurePrivateFile(path: string): Promise<void> {
@@ -11,14 +20,11 @@ export async function ensurePrivateFile(path: string): Promise<void> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
   }
+  await chmodBestEffort(path, 0o600)
 }
 
 export async function chmodPrivate(path: string): Promise<void> {
-  try {
-    await chmod(path, 0o600)
-  } catch {
-    // Windows and some filesystems do not expose POSIX modes; best effort.
-  }
+  await chmodBestEffort(path, 0o600)
 }
 
 export async function fileSize(path: string): Promise<number> {

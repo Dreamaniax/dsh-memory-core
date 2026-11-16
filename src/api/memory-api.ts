@@ -229,12 +229,16 @@ class MemoryApiImpl implements MemoryApi {
 }
 
 export async function openMemoryCore(options: OpenMemoryCoreOptions): Promise<MemoryApi> {
-  const validation = resolveValidationConfig(options.validation)
-  const store = await SqliteStore.open(options)
   try {
-    return new MemoryApiImpl(store, validation, options.clock ?? systemClock)
+    const validation = resolveValidationConfig(options.validation)
+    const store = await SqliteStore.open(options)
+    try {
+      return new MemoryApiImpl(store, validation, options.clock ?? systemClock)
+    } catch (error) {
+      await store.close().catch(() => undefined)
+      throw error
+    }
   } catch (error) {
-    await store.close().catch(() => undefined)
-    throw error
+    throw toMemoryError(error)
   }
 }

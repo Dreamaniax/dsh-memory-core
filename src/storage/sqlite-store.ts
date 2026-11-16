@@ -125,6 +125,11 @@ export class SqliteStore {
     if (!inMemory) {
       await ensurePrivateDirectory(dirname(path))
       await ensurePrivateFile(path)
+      // SQLite creates -wal/-shm beside the database. Tighten modes before the
+      // first connection so new sidecars inherit the private database mode,
+      // and repair sidecars left behind by an earlier release.
+      await chmodPrivate(path + '-wal')
+      await chmodPrivate(path + '-shm')
     }
 
     let db: DatabaseSync | undefined

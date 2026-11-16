@@ -171,7 +171,11 @@ export function rowToMemoryVersion(row: MemoryVersionRow): MemoryVersion {
   const parsed = parseStoredJson(row.snapshot_json, 'memory version snapshot')
   if (!isRecord(parsed)) throw corrupt('stored memory version snapshot is not an object')
   const snapshot = parsed as unknown as MemorySnapshot
-  if (snapshot.version !== row.version || snapshot.id === undefined || snapshot.namespaceId === undefined) {
+  if (
+    snapshot.version !== row.version ||
+    snapshot.id !== row.memory_id ||
+    snapshot.namespaceId !== row.namespace_id
+  ) {
     throw corrupt('stored memory version snapshot does not match its row')
   }
   return {

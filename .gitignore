@@ -16,11 +16,21 @@ coverage/
 *.sqlite3.bak-*
 *.db.bak-*
 
-# Never commit local secrets or environment files.
+# Never commit local secrets, keys, certificates, or environment files.
 .env
 .env.*
 !.env.example
 secrets.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.p8
+id_rsa*
+id_ed25519*
 
 # OS/editor noise.
 .DS_Store

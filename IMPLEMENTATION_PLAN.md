@@ -216,8 +216,8 @@ npm pack --dry-run
 - 挂载：`bash tests/integration/dsh-boot-verify.sh` exit 0；隔离 DSH_HOME 中 probe 通过 `ctx.memoryCore` 完成 create/get/search/feedback/close，重启读取同一 memoryId，干净关闭无 WAL/SHM；测试未写入真实 profile。
 - 示例：`node examples/weekly-retro/ingest.mjs --selftest`、`node examples/prompt-optimizer/ingest.mjs --selftest` 均 exit 0。
 - 包审计：真实 tarball 139 files / 130,527 bytes（commit 542182d 的 gate）；无 DB/tests/临时数据/密钥。
-- 发布收口：真实 tarball 从干净副本打包并安装到隔离 DSH_HOME，挂载 probe 通过；profile 安装先 `npm cache add zod@4.4.3` 预热再用 `--offline`，未手工复制依赖；文件模式为 79×100644 + 2×100755（两个直接执行的验证脚本）；全新 clone 的 `npm ci` 通过；详见 docs/RELEASE_READINESS.md。
-- 测试：47/47 通过；lines 95.80%、branches 85.07%、functions 94.72%。
+- 发布收口：真实 tarball 从干净副本打包并安装到隔离 DSH_HOME，挂载 probe 通过；profile 安装先 `npm cache add zod@4.6.6` 预热再用 `--offline`，未手工复制依赖；文件模式为 80×100644 + 2×100755（两个直接执行的验证脚本；含 LICENSE）；全新 clone 的 `npm ci` 通过；详见 docs/RELEASE_READINESS.md。
+- 测试：50/50 通过；lines 96.19%、branches 85.85%、functions 94.84%（覆盖率数字按本次审计重跑结果更新）。
 - 仍未完成：License 决策、npm 发布、Windows 验证、备份加密/保留策略、Git 历史本机路径处理（公开前）、完全断网一次性安装证明。tarball 门禁冷缓存首次需要 registry 提供 zod packument + tarball，预热后 profile 安装为 `--offline`。详见 docs/RELEASE_READINESS.md。
 
 ## 6. 测试矩阵（映射用户 11 项要求）
@@ -306,7 +306,7 @@ npm pack --dry-run
 10. 包名/入口：dsh-memory-core + ./plugin；不修改现有插件，示例独立。
 11. 测试目标：node:test 全量通过；核心覆盖 >=85%；10k 基准报告。
 12. 迁移失败 fail-closed、迁移前备份、保留 3 份、不自动重建。
-13. 运行时依赖：仅 zod ^4.4（宿主已有 4.4.3，用于输入校验）；开发依赖仅 typescript 5.9.3 与 @types/node 24.x；node:sqlite 为内置，无原生模块。
+13. 运行时依赖：仅 zod ^4.6.6（宿主已安装 4.6.6，用于输入校验）；开发依赖仅 typescript 5.9.3 与 @types/node 24.x；node:sqlite 为内置，无原生模块。
 14. 包管理：独立仓库用 npm + package-lock.json；安装进 DSH profile 时用 pnpm（DSH 内置 11.28.5）。
 15. 身份作用域：namespace-scoped (namespace_id, id)；不同 namespace 可复用 id（ADR 0008）。
 16. 状态/删除：update 不改 status；deleteMemory 只软删；purgeMemory 独立 token（ADR 0009）。
@@ -318,8 +318,8 @@ npm pack --dry-run
 - Sprint 1：**完成**。SqliteStore、迁移、001 Schema、备份、13 项测试通过；详见 docs/SPRINT1_REPORT.md。
 - Sprint 2：**完成**。contracts/validation/errors、repositories、MemoryManager、MemoryApi、来源追踪、namespace 隔离、版本快照、软删除/purge；23 项集成测试通过；详见 docs/SPRINT2_REPORT.md。
 - Sprint 3：**完成**。FTS5 trigram + 短查询 LIKE 回退、BM25、snippet、type/status/namespace/expiry 过滤；confirm/correct/reject/flag、requestHash 幂等、版本快照同事务、软删除历史、purge 级联；43 项测试通过；详见 docs/SPRINT3_REPORT.md。
-- Sprint 4：**完成（发布准备）**。Cordis `memoryCore` Service、`./plugin`、`cordis.patch.yml`、隔离 DSH_HOME 真实挂载、两个独立示例、npm pack 审计；47 项测试通过；详见 docs/SPRINT4_REPORT.md。
+- Sprint 4：**完成（发布准备）**。Cordis `memoryCore` Service、`./plugin`、`cordis.patch.yml`、隔离 DSH_HOME 真实挂载、两个独立示例、npm pack 审计；50 项测试通过；详见 docs/SPRINT4_REPORT.md。
 - 发布收口：**完成私有候选包审计**。真实 tarball 安装 + 隔离挂载、文件模式规范化、干净 `npm ci`、当前树/历史 secrets 与路径审计；仍未公开/未 npm publish/未选许可证。详见 docs/RELEASE_READINESS.md。
 - 生产代码：CRUD + provenance + search/feedback + DSH Service 可用。
-- 自动化测试：47 项通过；整体 lines 95.80%、branches 85.07%、functions 94.72%；核心 service 行/函数 >=85%。
+- 自动化测试：50 项通过；整体 lines 96.19%、branches 85.85%、functions 94.84%；核心 service 行/函数 >=85%。
 - 下一步：License 决策、Git 历史路径处理、Windows 验证、备份加密/恢复演练、npm publish 决策、v0.2 backlog。

@@ -374,7 +374,7 @@ dsh-memory-core/
 | 依赖 | 类型 | 用途 | 是否可避免 |
 | --- | --- | --- | --- |
 | node:sqlite | Node 内置 | SQLite/FTS5 | 否（核心） |
-| zod ^4.4 | runtime | API 输入校验 | 可手写，但不建议；宿主已有 4.4.3 |
+| zod ^4.6.6 | runtime | API 输入校验 | 可手写，但不建议；宿主已安装 4.6.6 |
 | @deepseek-ai/cordis | peer | Service/插件生命周期 | 否（仅 plugin 入口） |
 | @deepseek-ai/schemastery | peer | 插件 Config schema | 否（仅 plugin 入口） |
 | typescript 5.9.3 | dev | 编译 | 否 |
