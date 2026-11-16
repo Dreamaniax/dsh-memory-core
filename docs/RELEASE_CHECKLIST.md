@@ -54,6 +54,28 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
 - [ ] GitHub visibility switch, public Release/tag, and npm publish not performed and not
       authorized.
 
+## Privacy/security audit (2026-11-16)
+
+- [x] Audited commit `692785481632f3a75e5029bb625d1d2076ef1c0f` (tree
+      `d7fa483def91f170211fde6dce125c521115ed7b`) and all reachable history; report at
+      `reviews/PRIVACY_SECURITY_AUDIT.md`.
+- [x] Fixed a High-severity zod advisory (GHSA-mrhx-c7xc-m3w5) by upgrading zod
+      4.4.3 to 4.6.6; full `npm audit` now reports 0 vulnerabilities.
+- [x] Hardened existing data directories/DB/WAL/SHM to 0700/0600; added a POSIX-mode
+      regression test (skipped on Windows).
+- [x] Version snapshots now must match their row id/namespace; open failures and the
+      Cordis facade use the stable public error model.
+- [x] Added key/certificate ignore rules; corrected README/security documentation.
+- [x] `npm test` 50/50 pass; coverage 96.19% lines / 85.85% branches / 94.84% functions;
+      examples pass; clean clone passes typecheck, tests, and examples.
+- [x] Real tarball gate at the audited tree: 137,707 bytes, 140 files, requiredFiles 9,
+      all 0644, forbiddenPaths 0, contentFindings 0, zod 4.6.6; isolated DSH mount
+      memoryId `0bde3bb1-2dea-44b9-9d47-8ac25122e0eb`.
+- [ ] Windows/Linux, fully offline cold-cache first-run, and continuous vulnerability
+      monitoring remain unverified; early local-path history remains accepted.
+- [ ] Visibility switch, public Release/tag, and npm publish remain unperformed and not
+      authorized.
+
 ## Verified baseline (2026-11-15, v0.1.0)
 
 - [x] TypeScript typecheck and build exit 0.
