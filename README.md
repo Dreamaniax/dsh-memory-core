@@ -2,7 +2,7 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：v0.1.0 的 Sprint 1–4 与发布收口已完成。47 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；包仍为 private，未发布 npm，许可证待定。
+> 状态：v0.1.0 发布候选。Sprint 1–4 与发布收口已完成，47 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；包仍为 private、未发布 npm；Windows 未验证，不宣称支持。
 >
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
@@ -31,6 +31,19 @@ Memory Core 提供一个共享的进程内服务与可独立导入的库：
 
 明确不做：向量库、embedding、自动 LLM 抽取、自动 consolidation、多机同步、复杂用户画像、HTTP 服务。
 
+## 支持平台与运行时
+
+| 项目 | 状态 |
+| --- | --- |
+| macOS arm64 | 已实测（DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0） |
+| Windows | **未验证**；本版本不宣称支持 |
+| Linux | 未验证 |
+| Node.js | `>=22.19.0`（`package.json` 的 `engines`） |
+| DSH | `>=0.2.2-rc.1`（`package.json` 的 `dsh.engines`） |
+| SQLite 驱动 | `node:sqlite`，当前 Node 仍标记为 Experimental |
+
+> `node:sqlite` 在受支持 Node 版本中仍标记为 Experimental；升级 Node 或 DSH 必须重新跑全量测试、隔离挂载和 tarball 门禁。本版本不承诺跨 Node 版本的 API/ABI 稳定性。
+
 ## 架构速览
 
 ~~~text
@@ -50,42 +63,46 @@ $DSH_HOME/memory-core/memory.sqlite3
 
 ## 安装到 DSH
 
-包必须能被正在运行的 DSH profile 解析到；推荐把它作为 profile 的 bundle 依赖，而不是复制进项目目录。v0.1 验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
+v0.1 是私有候选包，**未发布 npm**，当前不能直接 `npm install dsh-memory-core`。包必须能被目标 DSH profile 解析到；推荐作为 profile 的 bundle 依赖，不要复制进业务项目目录。验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
 
-`package.json` 已声明：
+### 当前私有阶段：从本地 tarball 安装
+
+先从仓库构建并打包：
+
+~~~bash
+npm ci
+npm run build
+TARBALL="$(npm pack --silent | tail -n 1)"
+~~~
+
+准备一个**已存在**的目标 profile；开发/验收请使用隔离的 `DSH_HOME`，不要拿真实 `~/.dsh` 做测试。若使用临时 `DSH_HOME`，先按 `tests/integration/dsh-boot-verify.sh` 的方式启动一次 DSH 生成 profile。下面用 `$PROFILE` 表示该 profile 目录：
+
+~~~bash
+# 例：PROFILE="$DSH_HOME/profiles/web"
+npm install "$PWD/$TARBALL" --prefix "$PROFILE" \
+  --no-save --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+~~~
+
+`--no-save` 不会改 profile 清单；在该 profile 的 `package.json` 现有内容中补充（`file:` 必须是 tarball 绝对路径）：
 
 ~~~json
 {
-  "exports": {
-    ".": { "types": "./lib/index.d.ts", "default": "./lib/index.js" },
-    "./plugin": { "types": "./lib/plugin.d.ts", "default": "./lib/plugin.js" }
+  "dependencies": {
+    "dsh-memory-core": "file:/absolute/path/to/dsh-memory-core-0.1.0.tgz"
   },
   "dsh": {
-    "engines": { "dsh": ">=0.2.2-rc.1" },
-    "bundle": { "patch": "./cordis.patch.yml" }
+    "profile": {
+      "bundles": ["dsh-memory-core"]
+    }
   }
 }
 ~~~
 
-在 profile 中启用该 bundle（profile 的 `dsh.profile.bundles` 加入 `dsh-memory-core`），DSH 会读取包内 `cordis.patch.yml`：
-
-~~~yaml
-- insert:
-    - id: dsh-memory-core
-      name: dsh-memory-core/plugin
-~~~
-
-不要把真实 `~/.dsh` 当作测试目录。开发/验收请设置隔离的 `DSH_HOME`：
-
-~~~bash
-export DSH_HOME="$(mktemp -d)"
-# 让当前 profile 能解析到本包后，再启动 DSH。
-# 具体安装命令取决于 profile 的包管理方式；本仓库的挂载测试见 tests/integration/dsh-boot-verify.sh。
-~~~
+DSH 启动时读取包内 `cordis.patch.yml`，插入 `dsh-memory-core/plugin`。不同 profile 的包管理方式可能不同；`tests/integration/dsh-boot-verify.sh` 与 `dsh-tarball-verify.sh` 是可执行参考。公开 npm 发布后才可改为从 registry 安装。
 
 ### 配置
 
-默认配置即可启动；数据库路径默认取 `$DSH_HOME/memory-core/memory.sqlite3`。可用 Cordis patch 覆盖：
+默认配置即可启动；未设置 `DSH_HOME` 时回退到 `~/.dsh`，数据库路径默认取 `$DSH_HOME/memory-core/memory.sqlite3`。可用 Cordis patch 覆盖：
 
 ~~~yaml
 - insert:
@@ -102,7 +119,7 @@ export DSH_HOME="$(mktemp -d)"
 
 | 键 | 默认 | 说明 |
 | --- | --- | --- |
-| `path` | 空 | 空表示 `$DSH_HOME/memory-core/memory.sqlite3`；不自动展开 `~` |
+| `path` | 空 | 空表示 `$DSH_HOME/memory-core/memory.sqlite3`；非空时原样使用，不展开 `~` 或环境变量 |
 | `journalMode` | `wal` | `wal` / `delete` / `truncate` / `persist` |
 | `busyTimeoutMs` | `5000` | 0..60000 |
 | `synchronous` | `NORMAL` | `NORMAL` / `FULL` |
@@ -145,22 +162,39 @@ await core.close()
 
 库入口只使用公共 API；测试、CLI、迁移工具可复用同一套契约。生产插件应使用 Service，以保证单实例与生命周期。
 
-## 备份与恢复
+## 备份、恢复与删除边界
 
-`backupTo(path)` 使用 SQLite online backup API：先写临时文件，做 `integrity_check`，成功后原子 rename；目标权限 0600，父目录 0700。它不替代操作系统级磁盘加密。
+`backupTo(path)` 使用 SQLite online backup API：先写临时文件，做 `integrity_check`，成功后原子 rename；目标权限 0600，父目录 0700。**v0.1 不加密备份**，也不替代操作系统级磁盘加密。
 
 ~~~ts
 const result = await core.backupTo('/tmp/memory-backup.sqlite3')
 console.log(result.path, result.bytes)
 ~~~
 
+### 自动迁移备份与保留
+
+`backupBeforeMigrate` 默认 `true`：已有数据库发生待应用迁移前，先做 online backup。备份写到 `backupDir`；为空时写到数据库同目录，文件名形如 `memory.sqlite3.bak-<ISO 时间戳>`。自动迁移备份按文件名排序只保留最近 **3** 份。
+
+保留 3 份只适用于自动迁移备份；手动 `backupTo` 不自动清理旧文件。备份默认不加密、不异地保存。
+
+### 风险与用户保护
+
+备份包含全部记忆正文、来源、版本和反馈，属于敏感数据。`backupTo` 只保证文件权限和 `integrity_check`，**不提供加密、密钥管理、访问控制或安全擦除**。请自行：
+
+- 开启全盘加密（macOS FileVault、Windows BitLocker、Linux LUKS 等）；
+- 限制备份目录权限，不要把备份放进公共目录；
+- 对需要离机的备份使用加密卷/加密归档，并保留离线或异地副本；
+- 定期清理不需要的旧备份，做一次真实恢复演练。
+
+### 恢复
+
 恢复不是在线 API；必须停止 DSH（或先 `close()`），把备份文件放到配置的数据库路径，确认同目录没有残留 `-wal`/`-shm`，再启动并调用 `healthCheck()`。恢复前保留当前文件，恢复后验证 `integrity_check`、`foreign_key_check` 与 FTS integrity-check。
 
-注意：
+### 删除边界
 
-- `purgeMemory` 只删除当前库中的行；**不会清理历史备份、WAL 或文件系统快照中的旧内容**。
-- 迁移前备份默认保留 3 份，但不会自动加密或异地保存。
-- 备份包含全部记忆正文、来源、版本和反馈，按敏感数据管理。
+- `deleteMemory` 只做软删除，行仍在当前库中；不会从备份中删除。
+- `purgeMemory` 是独立特权操作，必须提供 `PURGE:<namespaceId>:<memoryId>` 确认 token；它物理删除当前库中的记忆行并级联 versions/feedback，清理失去引用的自动创建来源。
+- purge **不会**清理历史备份、WAL、文件系统快照或云同步版本历史；也不承诺安全擦除。需要彻底清除时，必须在停库后同时处理这些副本。
 
 ## 安全与已知限制
 
@@ -169,8 +203,8 @@ console.log(result.path, result.bytes)
 - 不联网、不写遥测、不调用 LLM；错误对外只暴露稳定 code，不返回 SQL 或正文。
 - 关键词检索：FTS5 trigram 覆盖长词；短于 3 个 code point 的词走 LIKE，复杂查询是 O(n)，大数据量下比 FTS 慢。
 - 中文 2 字词可检索但依赖 LIKE；没有分词器/向量检索/语义召回。
-- 单进程、单写连接；WAL 不适合网络盘；本机未验证 Windows。
-- `node:sqlite` 仍标记 Experimental，升级 Node 需重新跑完整测试。
+- 单进程、单写连接；WAL 不适合网络盘；仅 macOS arm64 实测，Windows/Linux 未验证，不宣称支持（见支持平台表）。
+- `node:sqlite` 仍标记 Experimental；升级 Node/DSH 必须重新跑全量测试、隔离挂载和 tarball 门禁。本版本不承诺跨 Node 版本的 API/ABI 稳定性。
 - 无自动抽取、自动 consolidation、归档恢复 UI、HTTP/工具层、跨 namespace 关系。
 - 容量数字见 [docs/CAPACITY_AND_EVOLUTION.md](docs/CAPACITY_AND_EVOLUTION.md)；十年场景是模型估算，不是实测预测。
 
@@ -255,4 +289,8 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 ## License
 
-TBD，待用户明确确认。建议 MIT（最短、集成摩擦最低，适合本地优先的插件基础设施）；若未来需要显式专利授权，再评估 Apache-2.0。未声明 License 前不要对外声称开源或发布 npm。选择后需要新增 LICENSE、在 package.json 声明 license，并更新本节。
+本项目采用 [MIT License](LICENSE)。Copyright (c) 2026 Dreamaniax。
+
+运行时依赖 zod@4.4.3 为 MIT；包内不包含 TypeScript（Apache-2.0，仅构建期开发依赖，不随 tarball 分发）。package-lock 中记录的 @deepseek-ai/cordis 4.1.0、@deepseek-ai/cosmokit 1.9.0、@deepseek-ai/schemastery 3.19.0、@standard-schema/spec 1.1.0 与 undici-types 7.24.6 均为 MIT。未发现与 MIT 分发冲突的依赖许可；未来新增依赖时发布前重新审计。
+
+包目前仍是 `private: true` 且未发布 npm；License 声明不代表已公开发布。

@@ -53,6 +53,7 @@ for (const entry of entries) {
 const entryNames = new Set(entries.map((entry) => entry.name))
 for (const required of [
   'package/package.json',
+  'package/LICENSE',
   'package/lib/index.js',
   'package/lib/plugin.js',
   'package/migrations/001_initial.sql',
@@ -69,6 +70,7 @@ run('tar', ['-xzf', tarball, '-C', unpackDir])
 const packageRoot = join(unpackDir, 'package')
 const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
 if (manifest.private !== true) failures.push('package.json private is not true')
+if (manifest.license !== 'MIT') failures.push('package.json license is not MIT')
 if (manifest.exports?.['./plugin']?.default !== './lib/plugin.js') failures.push('missing ./plugin export')
 if (manifest.dsh?.bundle?.patch !== './cordis.patch.yml') failures.push('missing dsh.bundle.patch')
 if (manifest.dependencies?.zod !== '4.4.3') failures.push('unexpected or missing zod dependency')
@@ -103,7 +105,7 @@ console.log(JSON.stringify({
   files,
   packageVersion: manifest.version,
   private: manifest.private,
-  requiredFiles: 8,
+  requiredFiles: 9,
   modes: 'all files 0644, directories 0755',
   forbiddenPaths: 0,
   contentFindings: 0,

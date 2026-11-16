@@ -1,9 +1,9 @@
 # Release Readiness Report — DSH Memory Core v0.1.0
 
-- 日期：2026-11-15
+- 日期：2026-11-16
 - 仓库：Dreamaniax/dsh-memory-core（private）
-- 状态：发布准备完成到“可审计的私有候选包”；**未公开发布、未 npm publish、未选择许可证**
-- 基线：Sprint 4 的 commit e762b9e；发布收口代码/门禁到 commit 542182d
+- 状态：v0.1.0 私有发布候选；**MIT License 已选定；未公开发布、未 npm publish、未切换仓库可见性**
+- 基线：Sprint 4 发布收口代码/门禁到 commit dd8c16c；本报告描述其后的候选变更
 
 ## 1. 结论
 
@@ -14,14 +14,15 @@
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
 | 全量测试 | 通过 | 47 / 47，0 fail |
 | 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
+| 许可证 | 通过（选定 MIT） | LICENSE + package.json `license: MIT` + README；依赖许可无冲突（见 §5） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
 | 隔离 DSH_HOME 挂载 | 通过 | ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭 |
 | 真实 tarball 安装 + 挂载 | 通过 | 干净 tarball 安装到临时 profile，再运行同一挂载 probe；commit 542182d 上 memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
 | tarball 依赖缓存 | 通过 | 冷缓存先用 npm cache add 缓存 zod packument + tarball，再以 --offline 安装；未手工复制依赖 |
 | tarball 内容审计 | 通过 | 139 个文件全部 0644；无数据库/测试/缓存/密钥/个人路径 |
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
-| Git 历史审计 | 有条件通过 | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径 |
-| Windows | 未验证 | 仅在 macOS arm64 上实测 |
+| Git 历史审计 | 通过（接受保留） | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径，决定不重写 |
+| Windows | 未验证 | 仅在 macOS arm64 上实测；本版本不宣称支持 Windows |
 | npm registry 发布 | 未执行 | 包保持 private，未 npm publish |
 
 ## 2. 真实 tarball 安装证据
@@ -88,17 +89,17 @@ zod 缓存并以 `--offline` 安装 profile；它不会把工作区或 node_modu
 
 | 项 | 值 |
 | --- | ---: |
-| 条目数 | 139 |
-| 文件数 | 139 |
-| packed size | 130,527 bytes（commit 542182d 的代码/门禁 gate）；文档 commit 864b693 上为 132,309 bytes、139 files，最终以实际 gate 输出为准 |
-| unpacked size | 约 481 KB |
+| 条目数 | 140（候选包预检；含 LICENSE，最终以 gate 输出为准） |
+| 文件数 | 140（候选包预检） |
+| packed size | 候选包预检 134,354 bytes（文档定稿前）；最终以实际 gate 输出为准 |
+| unpacked size | 约 490 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |
 | 数据库 / WAL / SHM | 0 |
 | tests / node_modules / .tmp / coverage | 0 |
 | 密钥、token、个人绝对路径 | 0 |
 
-包含：lib（js/d.ts/map）、migrations/001_initial.sql、cordis.patch.yml、根文档、
+包含：LICENSE、lib（js/d.ts/map）、migrations/001_initial.sql、cordis.patch.yml、根文档、
 docs/、examples/。不包含：types/（仅编译期）、测试、数据库、缓存、日志。
 
 ## 4. Git 当前树与历史审计
@@ -119,12 +120,12 @@ docs/、examples/。不包含：types/（仅编译期）、测试、数据库、
   或临时脚本，其中可能出现临时 DSH web token、本机路径和提交邮箱。它被 .gitignore 忽略，
   不在 Git 历史或 tarball 中；每次发布前都应删除，不能作为交付物。
 
-历史处理建议：**接受并保留现有历史（推荐）**。两条路径是开发机工作目录，不含凭据、
-真实用户记忆或会话正文；当前树已经脱敏。改写已推送历史会改变 commit SHA、要求所有
-克隆重新同步，收益与风险不成比例。公开时在 README/审计报告中说明这两条是开发机路径
-即可。
+历史处理决定：**接受并保留现有历史**（用户已确认）。两条路径是开发机工作目录，
+不含凭据、真实用户记忆或会话正文；当前树已经脱敏。改写已推送历史会改变 commit SHA、
+要求所有克隆重新同步，收益与风险不成比例。本次不执行 history rewrite 或 force-push；
+公开时在 README/审计报告中说明这两条是开发机路径即可。
 
-备选（均未执行，需用户明确授权）：
+以下备选仅记录，未执行：
 
 1. 重写历史：用 git filter-repo 替换这两个路径，然后 force-push；需要协调所有克隆，
    且会改写 commit SHA。
@@ -133,32 +134,43 @@ docs/、examples/。不包含：types/（仅编译期）、测试、数据库、
 
 ## 5. 许可证
 
-当前没有 LICENSE，package.json 没有 license 字段，README 标注 TBD；不得对外称为
-open source。两个候选：
+已选定 **MIT**，并已落地：
 
-| 许可 | 优点 | 代价 |
-| --- | --- | --- |
-| MIT | 最短、集成摩擦最低、插件生态常见 | 无显式专利授权 |
-| Apache-2.0 | 显式专利授权、贡献/通知条款更完整 | 文本更长，需 NOTICE/合规说明 |
+- 根目录 [LICENSE](../LICENSE)：标准 MIT 文本，Copyright (c) 2026 Dreamaniax。
+- `package.json` 的 `"license": "MIT"`；`files` 显式包含 `LICENSE`。
+- [README.md](../README.md) 的 License 段已从 TBD 替换为 MIT 与依赖说明。
+- `tests/integration/check-tarball.mjs` 要求 `package/LICENSE` 存在，且
+  `manifest.license === "MIT"`。
 
-建议：**MIT**。v0.1 是本地优先的基础设施包，MIT 的短文本和最低集成摩擦更适合插件生态；
-Apache-2.0 的优势是显式专利授权，若未来有企业/专利敏感的下游集成再切换。最终由用户
-明确确认，确认前不添加 LICENSE、不宣称 open source。
+依赖许可核对（来自已安装包与 package-lock）：
 
-选择后需要改：
+| 包 | 版本 | 许可 | 与分发的关系 |
+| --- | --- | --- | --- |
+| zod | 4.4.3 | MIT | 运行时依赖；随 profile 安装，不在本包 tarball 内 |
+| @deepseek-ai/cordis | 4.1.0 | MIT | peer dependency，由 DSH 宿主提供 |
+| @deepseek-ai/schemastery | 3.19.0 | MIT | peer dependency，由 DSH 宿主提供 |
+| @deepseek-ai/cosmokit | 1.9.0 | MIT | 传递依赖 |
+| @standard-schema/spec | 1.1.0 | MIT | 传递依赖 |
+| undici-types | 7.24.6 | MIT | 开发/传递依赖 |
+| @types/node | 24.19.2 | MIT | 仅开发期类型 |
+| typescript | 5.9.3 | Apache-2.0 | 仅构建期 devDependency，不随 tarball 分发 |
 
-- 新增 LICENSE（Apache-2.0 还需 NOTICE，如适用）
-- package.json 增加 "license"
-- README 的 License 段替换 TBD
-- 如发布 npm，评估是否移除 "private": true；公开发布 GitHub 不等同于 npm publish
+未发现 GPL/AGPL/SSPL 等 copyleft 或与 MIT 分发不兼容的运行时依赖。MIT 允许使用、修改、
+再分发，条件是保留版权与许可声明。TypeScript 的 Apache-2.0 仅约束该开发工具本身，不要
+求本项目整体改用 Apache-2.0；若未来把 TypeScript 或其它 Apache-2.0 材料随包分发，需保留
+其 NOTICE/许可文本并重新审计。
+
+npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并由 tarball 门禁强制校验。
+包目前仍是 `private: true` 且未发布 npm；MIT 声明不代表已公开发布。
 
 ## 6. 已知限制与未验证项
 
-- 仅实测 macOS arm64；Windows 未验证。
+- 仅实测 macOS arm64；Windows 未验证，本版本明确不宣称支持；Linux 未验证。
 - node:sqlite 仍标记 Experimental；升级 Node/DSH 需要重跑全量测试与挂载。
 - namespaceId 不是认证/授权边界；无加密、无多租户隔离。
 - purge 只删除当前库行；不会清除历史备份、WAL、云同步版本历史或文件系统快照。
-- 迁移前备份默认保留 3 份；备份加密/异地保留/恢复演练仍待产品决定。
+- 迁移前备份默认保留 3 份且不加密；v0.1 不内置加密、异地保留或恢复演练，风险与用户保护方式见 README。
+- MIT License 已选定；新增依赖时发布前重新核对许可。
 - 干净 `npm ci` 需要 npm registry（或已预热 cache）；tarball gate 的冷缓存需要 registry 提供
   zod packument + tarball，预热后 profile 安装以 `--offline` 执行。完全断网的一次性安装
   仍未证明。

@@ -3,7 +3,28 @@
 Status: private repository / npm publication disabled. The package is an auditable private
 candidate, not a public release. Complete the decisions below before changing that status.
 
-## Verified (2026-11-15, v0.1.0)
+Last updated: 2026-11-16 for the v0.1.0 release candidate.
+
+## Candidate verification (2026-11-16)
+
+- [x] LICENSE (MIT) added; `package.json` has `"license": "MIT"`; README License section
+      updated; the tarball gate requires `package/LICENSE` and `manifest.license === "MIT"`.
+- [x] Dependency license audit: zod MIT; TypeScript Apache-2.0 (dev/build only, not in
+      tarball); peer and transitive packages MIT. No conflict with MIT distribution.
+- [x] History decision: accept and keep the two early local absolute paths; no rewrite and
+      no force-push.
+- [x] Platform decision: macOS arm64 tested; Windows and Linux unverified, not claimed as
+      supported.
+- [x] Backup decision: automatic migration backups keep the newest 3; unencrypted by default;
+      manual `backupTo` files are not pruned. Risk and user protection documented in README.
+- [x] `npm run typecheck` exit 0; `npm run build` exit 0; `npm test` 47/47 pass, 0 fail;
+      coverage 95.80% lines / 85.07% branches / 94.72% functions; `npm run test:examples`
+      exit 0.
+- [x] `npm pack --dry-run` precheck: 140 files, LICENSE present, license MIT, private true,
+      134,354 bytes packed (final gate output governs).
+- [ ] Isolated DSH mount and real tarball gate on the committed candidate.
+
+## Verified baseline (2026-11-15, v0.1.0)
 
 - [x] TypeScript typecheck and build exit 0.
 - [x] 47 integration/unit tests pass on the build output (47 pass, 0 fail).
@@ -52,20 +73,21 @@ first-run install on a machine with an empty cache.
 
 ## Required decisions before public release
 
-- [ ] Confirm a license. Recommended: MIT (short, permissive, no explicit patent grant);
-      Apache-2.0 if an explicit patent grant is required. Do not describe the project as open
-      source until a LICENSE file is present. Files to change: LICENSE, package.json (license),
-      README License section; Apache-2.0 may also need NOTICE.
-- [ ] Decide how to handle the two local absolute paths in earlier Git commits.
-      Recommendation: accept and keep them; they are development paths, not credentials or
-      user data, and the current tree is redacted. Rewriting pushed history requires explicit
-      consent and re-coordinating all clones.
-- [ ] Keep "private": true unless actually publishing to npm. A public GitHub repository does
-      not require an npm publish.
-- [ ] Choose a Windows policy: add CI/real-machine verification, or document Windows as
-      unsupported/untested. Only macOS arm64 has been tested here.
-- [ ] Decide backup encryption, retention, off-machine storage, and a restore drill owner.
-- [ ] Decide whether "node:sqlite" Experimental is acceptable for the supported Node range.
+- [x] Confirm a license. Selected MIT; LICENSE, package.json, README, and the tarball gate
+      are updated. Apache-2.0 was considered for an explicit patent grant but not selected.
+- [x] Decide how to handle the two local absolute paths in earlier Git commits. Accepted and
+      kept; they are development paths, not credentials or user data, and the current tree is
+      redacted. No history rewrite and no force-push.
+- [x] Keep "private": true unless actually publishing to npm. The package remains private; a
+      public GitHub repository would not require an npm publish.
+- [x] Choose a Windows policy. Windows and Linux are documented as unverified and are not
+      claimed as supported. Only macOS arm64 has been tested here.
+- [x] Decide backup encryption, retention, off-machine storage, and a restore drill owner.
+      v0.1 keeps the current default: newest 3 automatic migration backups, unencrypted,
+      no off-machine copy. README documents the risk, user protection options, and restore
+      procedure.
+- [x] Decide whether "node:sqlite" Experimental is acceptable for the supported Node range.
+      Accepted for the v0.1 candidate and explicitly documented as Experimental.
 - [ ] Before any npm publish: remove "private", confirm the package name, run
       npm publish --dry-run, inspect the final tarball, then publish.
 - [ ] Before switching the GitHub repository public: repeat the secrets/history/license audit
@@ -81,4 +103,5 @@ first-run install on a machine with an empty cache.
   after npm cache add, the profile install is offline.
 - Keyword search only; Chinese 2-character queries use O(n) LIKE fallback.
 - No HTTP/tool layer, automatic extraction, consolidation, vector search, or multi-agent sync.
-- Windows is unverified; no npm publish has been performed.
+- Windows and Linux are unverified; this candidate does not claim support. No npm publish
+  has been performed.

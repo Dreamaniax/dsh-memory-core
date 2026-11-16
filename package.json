@@ -2,6 +2,7 @@
   "name": "dsh-memory-core",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Reusable local-first long-term memory infrastructure for DSH plugins (SQLite + FTS5).",
   "main": "lib/index.js",
@@ -18,6 +19,7 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "LICENSE",
     "lib",
     "migrations",
     "docs",
