@@ -146,6 +146,35 @@ first-run install on a machine with an empty cache.
 - [x] Before switching the GitHub repository public: repeated the secrets/history/license audit
       and confirmed there is no unreviewed personal data.
 
+## Public release execution (2026-11-16)
+
+- [x] Release commit `cfbc632c534d697fb9906ec671d0426d046677f7`, tree
+      `0d222d37f28e119505e2d55a79d5dc8ae28112f3`; local main = origin/main = GitHub
+      `refs/heads/main`; worktree clean.
+- [x] GitHub repository switched to public: https://github.com/Dreamaniax/dsh-memory-core
+      (verified `private: false`, `visibility: public`, default branch `main`).
+- [x] Annotated tag `v0.1.0` created: tag object
+      `dcfab071d185203b73a7590cf4d6bf765673c003` -> commit `cfbc632`.
+- [x] GitHub Release published (not draft/prerelease):
+      https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.0
+- [x] npm published: `@dreamaniax/dsh-memory-core@0.1.0`, public access, latest tag:
+      https://www.npmjs.com/package/@dreamaniax/dsh-memory-core
+- [x] Published tarball (downloaded from the registry; sha256 matches the clean release
+      artifact): 138,731 bytes, 140 files, sha256
+      `0319870c666ae5202f24e7a5ce6dd4b6f801b324e967f056d8e842f2ca92f9dd`,
+      npm shasum `64f2513a9620335c996317444b889799b4bdf4c5`.
+- [x] Registry propagation verified: version endpoint returns 0.1.0; packument became
+      available; `npm view @dreamaniax/dsh-memory-core@0.1.0` returns 0.1.0.
+- [x] Clean registry install from a temp directory: `npm install
+      @dreamaniax/dsh-memory-core@0.1.0` exit 0; `npm ls` resolved to the registry tarball;
+      probe created a candidate, confirmed it to active, searched (total 1, matchedBy fts),
+      read history (1), healthCheck ok, and backupTo wrote 122,880 bytes.
+- [x] Final tarball gate at the release commit: 138,731 bytes, 140 files, requiredFiles 9,
+      all files 0644 / directories 0755, forbiddenPaths 0, contentFindings 0, zod 4.6.6;
+      isolated DSH mount memoryId `613543fc-dce9-4a42-98dc-342ce313bbc2` passed.
+- [x] This post-release evidence commit changes docs only; it does not alter the published
+      0.1.0 npm artifact, the release commit, or the tag target.
+
 ## Known release limitations
 
 - node:sqlite is Experimental; pin/test the supported Node range.

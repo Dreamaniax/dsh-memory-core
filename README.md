@@ -4,6 +4,8 @@ Reusable, local-first long-term memory infrastructure for the DSH plugin ecosyst
 
 > 状态：v0.1.0 公开发布。Sprint 1–4 与发布收口已完成，50 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；npm 包为 `@dreamaniax/dsh-memory-core`，GitHub 仓库公开；Windows 未验证，不宣称支持。
 >
+> 链接：[GitHub](https://github.com/Dreamaniax/dsh-memory-core) · [npm](https://www.npmjs.com/package/@dreamaniax/dsh-memory-core) · [v0.1.0 Release](https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.0)
+>
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
 ## 为什么

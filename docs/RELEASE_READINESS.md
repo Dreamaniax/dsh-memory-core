@@ -1,9 +1,11 @@
 # Release Readiness Report — DSH Memory Core v0.1.0
 
 - 日期：2026-11-16
-- 仓库：Dreamaniax/dsh-memory-core（public）
-- npm：`@dreamaniax/dsh-memory-core@0.1.0`（public）
-- 状态：v0.1.0 已公开发布；MIT License；GitHub 仓库与 npm 包均已公开
+- 仓库：Dreamaniax/dsh-memory-core（public）— https://github.com/Dreamaniax/dsh-memory-core
+- npm：`@dreamaniax/dsh-memory-core@0.1.0`（public）— https://www.npmjs.com/package/@dreamaniax/dsh-memory-core
+- GitHub Release：https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.0
+- 状态：v0.1.0 已公开发布；MIT License；GitHub 仓库、tag/Release 与 npm 包均已公开
+- 发布 commit：`cfbc632c534d697fb9906ec671d0426d046677f7`（tree `0d222d37f28e119505e2d55a79d5dc8ae28112f3`）；tag `v0.1.0` 指向该 commit
 - 基线：Sprint 4 发布收口代码/门禁到 commit dd8c16c；本报告描述其后的候选变更
 - 安全更新（2026-11-16）：运行时 zod 从 4.4.3 升级到 4.6.6，修复 GHSA-mrhx-c7xc-m3w5；本文件中 4.4.3/47 项测试的早期门禁输出是历史记录，最新证据见 reviews/PRIVACY_SECURITY_AUDIT.md
 
@@ -11,7 +13,7 @@
 
 | 门禁 | 状态 | 证据 |
 | --- | --- | --- |
-| 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；加入 LICENSE 后候选 HEAD 为 80×100644 + 2×100755（两个直接执行的验证脚本） |
+| 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；发布 commit 为 83×100644 + 2×100755（共 85 个 tracked 文件；两个直接执行的验证脚本保持 100755） |
 | 干净依赖安装 | 通过（全新 cache + registry） | 全新临时 clone 执行 npm ci，exit 0 |
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
 | 全量测试 | 通过 | 50 / 50，0 fail |
@@ -26,6 +28,9 @@
 | Git 历史审计 | 通过（接受保留） | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径，决定不重写 |
 | Windows | 未验证 | 仅在 macOS arm64 上实测；本版本不宣称支持 Windows |
 | npm registry 发布 | 通过 | `@dreamaniax/dsh-memory-core@0.1.0`，`publishConfig.access=public`；不使用已被他人占用的 unscoped 名称 |
+| GitHub 公开发布 | 通过 | commit `cfbc632`；annotated tag `v0.1.0` -> `cfbc632`；GitHub Release 非 draft/prerelease；仓库 `private: false` |
+| 发布后 registry 验证 | 通过 | `npm view @dreamaniax/dsh-memory-core@0.1.0` 返回 0.1.0；干净目录安装成功；probe create/confirm/search/history/health/backup 通过；下载的 registry tarball sha256 与本地发布 artifact 一致 |
+| 最终 tarball 门禁 | 通过 | 138,731 bytes、140 files、全部 0644、forbiddenPaths 0、contentFindings 0、zod 4.6.6；隔离挂载 memoryId `613543fc-dce9-4a42-98dc-342ce313bbc2` |
 
 ## 2. 真实 tarball 安装证据
 
@@ -201,8 +206,9 @@ npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并�
 公开发布执行（2026-11-16，用户已授权）：
 
 6. 在普通 checkout 复核文件模式；云同步工作区的 `npm pack` 会生成 0700，因此发布用 `git archive HEAD` 干净副本，tarball 全部 0644、脚本 100755。
-7. 公开前再次扫描 secrets/历史/许可证；仓库已切为 public，创建 v0.1.0 tag/Release。
-8. npm 名称：unscoped `dsh-memory-core` 已被他人占用（0.1.10），不能覆盖；改用已确认可用的 scoped 名称 `@dreamaniax/dsh-memory-core`，移除 `private`，加 `publishConfig.access=public`；`npm publish --dry-run` 通过后从干净归档发布。
-9. `test:tarball` 的冷缓存首次仍需 registry；发布后 `npm view @dreamaniax/dsh-memory-core version` 与 registry 安装验证作为最终证据。
+7. 发布 commit `cfbc632c534d697fb9906ec671d0426d046677f7`（tree `0d222d37f28e119505e2d55a79d5dc8ae28112f3`，parent `7bedec472c8f51b781f3d11fdf2a869575459e1f`）；GitHub 仓库切为 public；annotated tag `v0.1.0`（tag object `dcfab071d185203b73a7590cf4d6bf765673c003`）指向该 commit；GitHub Release 已发布（非 draft/prerelease）：https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.0
+8. npm 名称：unscoped `dsh-memory-core` 已被他人占用（0.1.10），不能覆盖；改用 scoped 名称 `@dreamaniax/dsh-memory-core@0.1.0`，移除 `private`，加 `publishConfig.access=public`；`npm publish` exit 0，latest 指向 0.1.0：https://www.npmjs.com/package/@dreamaniax/dsh-memory-core
+9. 发布后验证：`npm view @dreamaniax/dsh-memory-core@0.1.0` 返回 0.1.0；干净临时目录从 registry 安装后，probe 完成 create、confirm、search（total 1，matchedBy fts）、history（1）、healthCheck 与 backup（122,880 bytes）；发布 tarball 138,731 bytes、140 files、sha256 `0319870c666ae5202f24e7a5ce6dd4b6f801b324e967f056d8e842f2ca92f9dd`。
+10. 发布后的本报告/checklist 提交只记录证据，不改变已发布 0.1.0 artifact 或 tag 目标。
 
 当前结论：**v0.1.0 已作为 MIT 公开源码和公开 npm 包发布**；Windows/Linux 仍未验证，node:sqlite 仍为 Experimental，备份仍未加密。
