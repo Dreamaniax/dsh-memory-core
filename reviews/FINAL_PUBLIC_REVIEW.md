@@ -11,7 +11,7 @@
 本次审查覆盖：
 
 1. 当前 Git 工作区、HEAD/tree、origin 与 GitHub 远端引用。
-2. 代码审查基准 81f9 的 82 个跟踪文件、14 个可达 commit、158 个唯一 blob；加入本报告后的最终 HEAD 为 83 个跟踪文件、16 个 commit、161 个唯一 blob。
+2. 代码审查基准 81f9 的 82 个跟踪文件、14 个可达 commit、158 个唯一 blob；加入本报告后的最终 tree 为 83 个跟踪文件，包内容不变。
 3. 从 Git tree 构建的真实 npm tarball，以及将该 tarball 安装到隔离 DSH_HOME 后的挂载、重启持久化和关闭行为。
 4. GitHub 实际可见性、tags、Releases 和包清单中的 private 标志。
 
@@ -76,8 +76,8 @@ tarball gate 的隔离挂载完成了 create/get/search/feedback/healthCheck/clo
 
 ### 全部可达历史
 
-- 最终 HEAD 共 16 个 commit、161 个唯一 blob、0 个二进制 blob。
-- 其中代码审查基准 81f9 是 14 个 commit、158 个唯一 blob；随后两个 docs commit 仅新增 checklist 与报告，共增加 3 个唯一 blob。
+- 代码审查基准 81f9 是 14 个 commit、158 个唯一 blob、0 个二进制 blob。
+- 81f9 之后的报告/文档提交只新增 checklist 与 reviews/ 下的报告文件，不改变源码、迁移或包内容；因此最终 tree 只多出 1 个跟踪文件。
 - 最大 blob 34,161 bytes，是 DSH_MEMORY_CORE_V0.1_ARCHITECTURE.md。
 - 无数据库、日志、私钥、token、真实用户记忆或会话内容。
 - 无 commit message 中的本机路径或凭据。
