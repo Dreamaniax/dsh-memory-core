@@ -60,7 +60,7 @@ tarball gate 的隔离挂载完成了 create/get/search/feedback/healthCheck/clo
 
 从同一文档树用 git archive 独立构建的 tarball：136,782 bytes；140 files；check-tarball.mjs exit 0；sha256 33c84ab3079229685adde510dafbd205d85f4d24517c535341db886194a405be。
 
-本报告最终提交仅修改 reviews/，该目录不在 npm tarball 的 files 列表中；因此最终报告提交的包内容与上述文档树 gate 相同。
+相对已通过上述 gate 的文档树，本报告的最终修订仅修改 reviews/；该目录不在 npm tarball 的 files 列表中，因此最终修订后的包内容与上述 gate 相同。
 
 ## 4. 当前树与历史审计
 
