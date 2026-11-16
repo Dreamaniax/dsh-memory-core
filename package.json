@@ -1,10 +1,30 @@
 {
-  "name": "dsh-memory-core",
+  "name": "@dreamaniax/dsh-memory-core",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "license": "MIT",
   "type": "module",
   "description": "Reusable local-first long-term memory infrastructure for DSH plugins (SQLite + FTS5).",
+  "author": "Dreamaniax",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "memory",
+    "sqlite",
+    "fts5",
+    "plugin"
+  ],
+  "homepage": "https://github.com/Dreamaniax/dsh-memory-core#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dreamaniax/dsh-memory-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dreamaniax/dsh-memory-core/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "exports": {

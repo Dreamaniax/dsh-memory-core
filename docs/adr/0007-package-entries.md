@@ -5,13 +5,13 @@
 
 ## 背景
 
-消费者需要 import { openMemoryCore } from 'dsh-memory-core'；DSH loader 需要加载 Cordis 插件模块。根入口若同时导入 Cordis，会让纯 Library 测试依赖宿主 peer。
+消费者需要 import { openMemoryCore } from '@dreamaniax/dsh-memory-core'；DSH loader 需要加载 Cordis 插件模块。根入口若同时导入 Cordis，会让纯 Library 测试依赖宿主 peer。
 
 ## 决策
 
 - 根 exports "." -> lib/index.js（Library，不依赖 Cordis）。
 - exports "./plugin" -> lib/plugin.js（Cordis Service）。
-- cordis.patch.yml 使用 name: dsh-memory-core/plugin。
+- cordis.patch.yml 使用 name: @dreamaniax/dsh-memory-core/plugin。
 - peerDependencies: @deepseek-ai/cordis、@deepseek-ai/schemastery（仅 plugin 入口需要）。
 - 若 loader 不支持子路径，Sprint 4 回退：根入口改为插件，Library 移到 ./core，或提供独立 wrapper 包。
 
@@ -22,5 +22,5 @@
 
 ## 后果
 
-- Sprint 4 已在隔离 DSH_HOME 中真实验证：dsh-memory-core/plugin 通过 ./plugin 子路径加载，ctx.memoryCore 可用。
+- Sprint 4 已在隔离 DSH_HOME 中真实验证：@dreamaniax/dsh-memory-core/plugin 通过 ./plugin 子路径加载，ctx.memoryCore 可用。
 - 消费者文档明确两个入口：根 Library 与 ./plugin。

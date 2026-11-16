@@ -380,8 +380,8 @@ export interface FeedbackResult {
 
 包导出：
 
-- `dsh-memory-core`：Library 入口，导出 `openMemoryCore`、类型与错误。
-- `dsh-memory-core/plugin`：Cordis Service 入口，默认导出 `MemoryCoreService`。
+- `@dreamaniax/dsh-memory-core`：Library 入口，导出 `openMemoryCore`、类型与错误。
+- `@dreamaniax/dsh-memory-core/plugin`：Cordis Service 入口，默认导出 `MemoryCoreService`。
 
 Service 契约：
 
@@ -390,7 +390,7 @@ Service 契约：
 - `ctx.effect` 在插件卸载时调用 `close()`；`close()` 幂等。
 - 配置：`path`、`journalMode`、`busyTimeoutMs`、`synchronous`、`backupBeforeMigrate`、`backupDir`。
 - 默认路径：`$DSH_HOME/memory-core/memory.sqlite3`；`path` 为空时使用默认值，不展开 `~`。
-- bundle patch：`cordis.patch.yml` 插入 id `dsh-memory-core`、name `dsh-memory-core/plugin`。
+- bundle patch：`cordis.patch.yml` 插入 id `dsh-memory-core`、name `@dreamaniax/dsh-memory-core/plugin`。
 
 消费者只 `inject` 服务，不负责关闭：
 

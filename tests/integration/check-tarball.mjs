@@ -69,7 +69,8 @@ mkdirSync(unpackDir, { recursive: true })
 run('tar', ['-xzf', tarball, '-C', unpackDir])
 const packageRoot = join(unpackDir, 'package')
 const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
-if (manifest.private !== true) failures.push('package.json private is not true')
+if (manifest.name !== '@dreamaniax/dsh-memory-core') failures.push('unexpected package name: ' + manifest.name)
+if (manifest.private === true) failures.push('package.json is still private')
 if (manifest.license !== 'MIT') failures.push('package.json license is not MIT')
 if (manifest.exports?.['./plugin']?.default !== './lib/plugin.js') failures.push('missing ./plugin export')
 if (manifest.dsh?.bundle?.patch !== './cordis.patch.yml') failures.push('missing dsh.bundle.patch')
@@ -103,6 +104,7 @@ console.log(JSON.stringify({
   bytes,
   entries: entries.length,
   files,
+  packageName: manifest.name,
   packageVersion: manifest.version,
   private: manifest.private,
   requiredFiles: 9,

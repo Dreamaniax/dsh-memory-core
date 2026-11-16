@@ -173,7 +173,7 @@ DSH 有完整的 **ctx.storage** / **ctx.storageDomain**：
 - 项目目录在云同步盘；**数据库不应放在项目目录**，必须放 $DSH_HOME 或临时测试目录，避免同步盘锁与 WAL 问题。
 - DSH 桌面版 Node 24.21；CLI 可能使用 Node 22.19+；代码需兼容 >= 22.19。
 - node:sqlite 仍标记 Experimental，API 可能变化；用薄驱动层隔离。
-- 插件加载器对子路径入口（dsh-memory-core/plugin）的支持已在 Sprint 4 实测：隔离 DSH_HOME 中 loader 接受 `./plugin`，`ctx.memoryCore` 可用；回退方案未启用。
+- 插件加载器对子路径入口（公开包名 `@dreamaniax/dsh-memory-core/plugin`；Sprint 4 实测时为旧包名）的支持已在隔离 DSH_HOME 中验证：loader 接受 `./plugin`，`ctx.memoryCore` 可用；回退方案未启用。
 
 ## 7. 技术选型对比
 
@@ -194,7 +194,7 @@ DSH 有完整的 **ctx.storage** / **ctx.storageDomain**：
 2. 永久删除是否级联 feedback/versions？**已收口：purgeMemory 级联；备份可能仍保留（ADR 0009）。**
 3. namespace 只是隔离标识，不是认证；**已接受；文档与 API 明确不把 namespace 当鉴权。**
 4. 中文检索 trigram + 短查询 LIKE 回退？**已收口：v0.1 采用，文档明示限制。**
-5. 包名与入口 dsh-memory-core + ./plugin 是否被 loader 接受？**已验证：Sprint 4 隔离 DSH_HOME 真实挂载通过，回退方案未启用。**
+5. 包名与入口 `@dreamaniax/dsh-memory-core` + ./plugin 是否被 loader 接受？**已验证：Sprint 4 隔离 DSH_HOME 真实挂载通过，回退方案未启用。**
 6. 是否在 v0.1 暴露 HTTP/LLM 工具？**已收口：不暴露，只做 Service + Library。**
 7. 是否修改 weekly-retro 现有插件？**已收口：只提供 examples，不改现有插件。**
 8. 数据库默认目录？**已收口：$DSH_HOME/memory-core/memory.sqlite3。**

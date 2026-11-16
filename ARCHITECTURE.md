@@ -105,7 +105,7 @@ DSH host process (Cordis Context)
 ### 3.7 Cordis Plugin Adapter
 
 - 一个宿主进程只挂载一个 Memory Core Service。
-- Service 名：**memoryCore**；入口为包导出 `./plugin`，对应 `cordis.patch.yml` 的 `dsh-memory-core/plugin`。
+- Service 名：**memoryCore**；入口为包导出 `./plugin`，对应 `cordis.patch.yml` 的 `@dreamaniax/dsh-memory-core/plugin`。
 - 生命周期：插件激活时打开库并迁移；`ctx.effect` 在卸载时 close；重复 close 幂等。
 - 配置：path、journalMode、busyTimeoutMs、synchronous、backupBeforeMigrate、backupDir。默认数据库为 `$DSH_HOME/memory-core/memory.sqlite3`；空 path 不展开 `~`。
 - 失败策略：打开/迁移失败让插件激活失败，不静默降级到内存库。
@@ -240,7 +240,7 @@ ctx.inject(['memoryCore'], (ctx) => {
 ### 6.3 纯 Library 用法
 
 ~~~ts
-import { openMemoryCore } from 'dsh-memory-core'
+import { openMemoryCore } from '@dreamaniax/dsh-memory-core'
 
 const core = await openMemoryCore({ path: '/tmp/memory.sqlite3' })
 await core.createMemory({ namespaceId: 'weekly-retro', type: 'episodic', content: '...' })

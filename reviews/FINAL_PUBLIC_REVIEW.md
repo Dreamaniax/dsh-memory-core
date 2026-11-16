@@ -4,7 +4,8 @@
 - 审查对象：Dreamaniax/dsh-memory-core，代码提交 81f9cd45d653e409b7a32e2d4eccaeab34678db4
 - 代码 tree：c0d9e9fb895a6762b1ef5dd9287d2d14a866cfc4
 - 结论：**适合公开 GitHub 源码**，保持包 private、不做 npm 发布；接受既定历史路径处理方案
-- 仓库实际可见性：**private**；tags 0；GitHub Releases 0
+- 仓库实际可见性（审查时）：**private**；tags 0；GitHub Releases 0
+- 发布后记（2026-11-16）：用户随后明确授权公开发布；当前仓库/npm 状态与最终发布证据见 docs/RELEASE_READINESS.md 和 docs/RELEASE_CHECKLIST.md。本报告保留公开前审查口径。
 
 ## 1. 审查范围与工作区
 

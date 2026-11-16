@@ -25,7 +25,8 @@ function runNpm(args, label, timeoutMs) {
 
 const profileDir = join(dshHome, 'profiles', 'web')
 const modulesDir = join(profileDir, 'node_modules')
-const packageDir = join(modulesDir, 'dsh-memory-core')
+const packageName = '@dreamaniax/dsh-memory-core'
+const packageDir = join(modulesDir, '@dreamaniax', 'dsh-memory-core')
 const probeDir = join(modulesDir, 'dsh-memory-core-probe')
 
 mkdirSync(modulesDir, { recursive: true })
@@ -94,7 +95,7 @@ if (tarball) {
 }
 
 if (!existsSync(join(packageDir, 'package.json'))) {
-  throw new Error('dsh-memory-core was not installed at ' + packageDir)
+  throw new Error(packageName + ' was not installed at ' + packageDir)
 }
 if (!existsSync(join(packageDir, 'cordis.patch.yml'))) {
   throw new Error('installed package has no cordis.patch.yml')
@@ -104,10 +105,10 @@ cpSync(join(root, 'tests', 'fixtures', 'dsh-mount', 'probe'), probeDir, { recurs
 const manifestPath = join(profileDir, 'package.json')
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
 manifest.dependencies ??= {}
-manifest.dependencies['dsh-memory-core'] = tarball ? 'file:' + tarball : 'file:./node_modules/dsh-memory-core'
+manifest.dependencies[packageName] = tarball ? 'file:' + tarball : 'file:./node_modules/@dreamaniax/dsh-memory-core'
 const bundles = manifest.dsh?.profile?.bundles
 if (!Array.isArray(bundles)) throw new Error('profile manifest has no dsh.profile.bundles array')
-if (!bundles.includes('dsh-memory-core')) bundles.push('dsh-memory-core')
+if (!bundles.includes(packageName)) bundles.push(packageName)
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
 
 writeFileSync(

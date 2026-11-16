@@ -1,8 +1,9 @@
 # Release Readiness Report — DSH Memory Core v0.1.0
 
 - 日期：2026-11-16
-- 仓库：Dreamaniax/dsh-memory-core（private）
-- 状态：v0.1.0 私有发布候选；**MIT License 已选定；未公开发布、未 npm publish、未切换仓库可见性**
+- 仓库：Dreamaniax/dsh-memory-core（public）
+- npm：`@dreamaniax/dsh-memory-core@0.1.0`（public）
+- 状态：v0.1.0 已公开发布；MIT License；GitHub 仓库与 npm 包均已公开
 - 基线：Sprint 4 发布收口代码/门禁到 commit dd8c16c；本报告描述其后的候选变更
 - 安全更新（2026-11-16）：运行时 zod 从 4.4.3 升级到 4.6.6，修复 GHSA-mrhx-c7xc-m3w5；本文件中 4.4.3/47 项测试的早期门禁输出是历史记录，最新证据见 reviews/PRIVACY_SECURITY_AUDIT.md
 
@@ -24,7 +25,7 @@
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
 | Git 历史审计 | 通过（接受保留） | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径，决定不重写 |
 | Windows | 未验证 | 仅在 macOS arm64 上实测；本版本不宣称支持 Windows |
-| npm registry 发布 | 未执行 | 包保持 private，未 npm publish |
+| npm registry 发布 | 通过 | `@dreamaniax/dsh-memory-core@0.1.0`，`publishConfig.access=public`；不使用已被他人占用的 unscoped 名称 |
 
 ## 2. 真实 tarball 安装证据
 
@@ -170,7 +171,7 @@ docs/、examples/。不包含：types/（仅编译期）、测试、数据库、
 其 NOTICE/许可文本并重新审计。
 
 npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并由 tarball 门禁强制校验。
-包目前仍是 `private: true` 且未发布 npm；MIT 声明不代表已公开发布。
+包已移除 `private` 并发布为 `@dreamaniax/dsh-memory-core@0.1.0`；MIT 为公开分发许可。
 
 ## 6. 已知限制与未验证项
 
@@ -184,7 +185,7 @@ npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并�
   zod packument + tarball，预热后 profile 安装以 `--offline` 执行。完全断网的一次性安装
   仍未证明。
 - tarball gate 依赖本机 DSH app 与 macOS 的进程/临时目录行为；Windows 未验证。
-- 未执行 npm publish、GitHub 公开切换、Windows CI、并发写/多进程压力测试。
+- 已执行 npm publish、GitHub 公开切换和 v0.1.0 Release；仍未做 Windows CI、并发写/多进程压力测试。
 - 中文 2 字查询走 LIKE，O(n)；无分词器/向量检索。
 
 ## 7. 公开发布步骤与状态
@@ -197,11 +198,11 @@ npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并�
 4. 备份策略：记录自动迁移备份保留最近 3 份、不加密、不异地；风险、用户保护和恢复步骤写入 README。
 5. 门禁：typecheck、build、test、coverage、examples、隔离 DSH 挂载、真实 tarball 安装与挂载均已复跑；结果见 §2。
 
-仍需用户明确授权/执行的公开发布步骤：
+公开发布执行（2026-11-16，用户已授权）：
 
-6. 在普通 checkout 确认文件模式（100644，脚本 100755），不要依赖云同步工作副本。
-7. 仓库转 public 前再次扫描 secrets/历史/许可证；转 public 后再做 GitHub release/tag。
-8. 若要 npm 发布：移除 `private`、确认包名可用、`npm publish --dry-run`、检查最终 tarball，再正式 publish。
-9. `test:tarball` 的冷缓存首次需要 registry；若要在 CI 完全离线运行，先预热 zod cache。
+6. 在普通 checkout 复核文件模式；云同步工作区的 `npm pack` 会生成 0700，因此发布用 `git archive HEAD` 干净副本，tarball 全部 0644、脚本 100755。
+7. 公开前再次扫描 secrets/历史/许可证；仓库已切为 public，创建 v0.1.0 tag/Release。
+8. npm 名称：unscoped `dsh-memory-core` 已被他人占用（0.1.10），不能覆盖；改用已确认可用的 scoped 名称 `@dreamaniax/dsh-memory-core`，移除 `private`，加 `publishConfig.access=public`；`npm publish --dry-run` 通过后从干净归档发布。
+9. `test:tarball` 的冷缓存首次仍需 registry；发布后 `npm view @dreamaniax/dsh-memory-core version` 与 registry 安装验证作为最终证据。
 
-当前结论：**私有候选包可审计、可安装、可挂载、具备 MIT 许可文件；但它仍不是公开可发布版本**，因为尚未执行公开可见性切换、公开 Release、npm publish，且 Windows/Linux 未验证。
+当前结论：**v0.1.0 已作为 MIT 公开源码和公开 npm 包发布**；Windows/Linux 仍未验证，node:sqlite 仍为 Experimental，备份仍未加密。

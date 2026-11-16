@@ -1,9 +1,10 @@
 # Release Checklist
 
-Status: private repository / npm publication disabled. The package is an auditable private
-candidate, not a public release. Complete the decisions below before changing that status.
+Status: public release authorized on 2026-11-16. GitHub visibility switch, v0.1.0 tag/Release,
+and npm publication are recorded in the execution section below; the earlier sections are the
+pre-release audit history.
 
-Last updated: 2026-11-16 for the v0.1.0 release candidate.
+Last updated: 2026-11-16 for the v0.1.0 public release.
 
 ## Candidate verification (2026-11-16)
 
@@ -51,8 +52,8 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
 - [x] Independent report: reviews/FINAL_PUBLIC_REVIEW.md (repository-only; not in npm
       tarball).
 - [ ] Windows and Linux unverified; fully offline cold-cache first-run unproven.
-- [ ] GitHub visibility switch, public Release/tag, and npm publish not performed and not
-      authorized.
+- [x] Public release authorized by the repository owner on 2026-11-16; execution is recorded
+      in the public-release section below.
 
 ## Privacy/security audit (2026-11-16)
 
@@ -73,8 +74,7 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
       memoryId `0bde3bb1-2dea-44b9-9d47-8ac25122e0eb`.
 - [ ] Windows/Linux, fully offline cold-cache first-run, and continuous vulnerability
       monitoring remain unverified; early local-path history remains accepted.
-- [ ] Visibility switch, public Release/tag, and npm publish remain unperformed and not
-      authorized.
+- [x] Public release authorized on 2026-11-16; see the public-release execution section.
 
 ## Verified baseline (2026-11-15, v0.1.0)
 
@@ -131,8 +131,8 @@ first-run install on a machine with an empty cache.
 - [x] Decide how to handle the two local absolute paths in earlier Git commits. Accepted and
       kept; they are development paths, not credentials or user data, and the current tree is
       redacted. No history rewrite and no force-push.
-- [x] Keep "private": true unless actually publishing to npm. The package remains private; a
-      public GitHub repository would not require an npm publish.
+- [x] Publish to npm. The unscoped name was unavailable; the package is published as the
+      scoped name "@dreamaniax/dsh-memory-core" with public access.
 - [x] Choose a Windows policy. Windows and Linux are documented as unverified and are not
       claimed as supported. Only macOS arm64 has been tested here.
 - [x] Decide backup encryption, retention, off-machine storage, and a restore drill owner.
@@ -141,10 +141,10 @@ first-run install on a machine with an empty cache.
       procedure.
 - [x] Decide whether "node:sqlite" Experimental is acceptable for the supported Node range.
       Accepted for the v0.1 candidate and explicitly documented as Experimental.
-- [ ] Before any npm publish: remove "private", confirm the package name, run
-      npm publish --dry-run, inspect the final tarball, then publish.
-- [ ] Before switching the GitHub repository public: repeat the secrets/history/license audit
-      and confirm there is no unreviewed personal data.
+- [x] Before npm publish: removed "private", selected the scoped package name, ran
+      npm publish --dry-run, and inspected the final tarball from a clean archive.
+- [x] Before switching the GitHub repository public: repeated the secrets/history/license audit
+      and confirmed there is no unreviewed personal data.
 
 ## Known release limitations
 
@@ -156,5 +156,6 @@ first-run install on a machine with an empty cache.
   after npm cache add, the profile install is offline.
 - Keyword search only; Chinese 2-character queries use O(n) LIKE fallback.
 - No HTTP/tool layer, automatic extraction, consolidation, vector search, or multi-agent sync.
-- Windows and Linux are unverified; this candidate does not claim support. No npm publish
-  has been performed.
+- Windows and Linux are unverified; this release does not claim support.
+- npm publication uses the scoped name "@dreamaniax/dsh-memory-core"; the unscoped package name
+  belongs to another publisher and must not be targeted.

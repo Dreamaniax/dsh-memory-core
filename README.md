@@ -2,7 +2,7 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：v0.1.0 发布候选。Sprint 1–4 与发布收口已完成，50 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；包仍为 private、未发布 npm；Windows 未验证，不宣称支持。
+> 状态：v0.1.0 公开发布。Sprint 1–4 与发布收口已完成，50 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；npm 包为 `@dreamaniax/dsh-memory-core`，GitHub 仓库公开；Windows 未验证，不宣称支持。
 >
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
@@ -63,42 +63,61 @@ $DSH_HOME/memory-core/memory.sqlite3
 
 ## 安装到 DSH
 
-v0.1 是私有候选包，**未发布 npm**，当前不能直接 `npm install dsh-memory-core`。包必须能被目标 DSH profile 解析到；推荐作为 profile 的 bundle 依赖，不要复制进业务项目目录。验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
+v0.1.0 是公开包 `@dreamaniax/dsh-memory-core`。包必须能被目标 DSH profile 解析到；推荐作为 profile 的 bundle 依赖，不要复制进业务项目目录。验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
 
-### 当前私有阶段：从本地 tarball 安装
+### 从 npm registry 安装
 
-先从仓库构建并打包：
-
-~~~bash
-npm ci
-npm run build
-TARBALL="$(npm pack --silent | tail -n 1)"
-~~~
-
-准备一个**已存在**的目标 profile；开发/验收请使用隔离的 `DSH_HOME`，不要拿真实 `~/.dsh` 做测试。若使用临时 `DSH_HOME`，先按 `tests/integration/dsh-boot-verify.sh` 的方式启动一次 DSH 生成 profile。下面用 `$PROFILE` 表示该 profile 目录：
+准备一个**已存在**的目标 profile；开发/验收请使用隔离的 `DSH_HOME`，不要拿真实 `~/.dsh` 做测试。下面用 `$PROFILE` 表示该 profile 目录：
 
 ~~~bash
 # 例：PROFILE="$DSH_HOME/profiles/web"
-npm install "$PWD/$TARBALL" --prefix "$PROFILE" \
-  --no-save --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+npm install @dreamaniax/dsh-memory-core@0.1.0 --prefix "$PROFILE" \
+  --legacy-peer-deps --ignore-scripts --no-audit --no-fund
 ~~~
 
-`--no-save` 不会改 profile 清单；在该 profile 的 `package.json` 现有内容中补充（`file:` 必须是 tarball 绝对路径）：
+若 profile 由其它包管理器维护，请按该 profile 的方式安装同一包。在该 profile 的 `package.json` 中确认依赖与 bundle：
 
 ~~~json
 {
   "dependencies": {
-    "dsh-memory-core": "file:/absolute/path/to/dsh-memory-core-0.1.0.tgz"
+    "@dreamaniax/dsh-memory-core": "0.1.0"
   },
   "dsh": {
     "profile": {
-      "bundles": ["dsh-memory-core"]
+      "bundles": ["@dreamaniax/dsh-memory-core"]
     }
   }
 }
 ~~~
 
-DSH 启动时读取包内 `cordis.patch.yml`，插入 `dsh-memory-core/plugin`。不同 profile 的包管理方式可能不同；`tests/integration/dsh-boot-verify.sh` 与 `dsh-tarball-verify.sh` 是可执行参考。公开 npm 发布后才可改为从 registry 安装。
+### 从源码或本地 tarball 安装
+
+不经过 registry 时，从当前仓库构建并打包：
+
+~~~bash
+npm ci
+npm run build
+TARBALL="$(npm pack --silent | tail -n 1)"
+npm install "$PWD/$TARBALL" --prefix "$PROFILE" \
+  --no-save --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+~~~
+
+`--no-save` 不会改 profile 清单；在该 profile 的 `package.json` 中补充（`file:` 必须是 tarball 绝对路径）：
+
+~~~json
+{
+  "dependencies": {
+    "@dreamaniax/dsh-memory-core": "file:/absolute/path/to/package.tgz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": ["@dreamaniax/dsh-memory-core"]
+    }
+  }
+}
+~~~
+
+DSH 启动时读取包内 `cordis.patch.yml`，插入 `@dreamaniax/dsh-memory-core/plugin`。不同 profile 的包管理方式可能不同；`tests/integration/dsh-boot-verify.sh` 与 `dsh-tarball-verify.sh` 是可执行参考。
 
 ### 配置
 
@@ -107,7 +126,7 @@ DSH 启动时读取包内 `cordis.patch.yml`，插入 `dsh-memory-core/plugin`�
 ~~~yaml
 - insert:
     - id: dsh-memory-core
-      name: dsh-memory-core/plugin
+      name: "@dreamaniax/dsh-memory-core/plugin"
       config:
         path: /absolute/path/to/memory.sqlite3
         journalMode: wal
@@ -141,7 +160,7 @@ ctx.inject(['memoryCore'], (ctx) => {
 独立脚本/测试可以直接使用 Library 入口：
 
 ~~~ts
-import { openMemoryCore } from 'dsh-memory-core'
+import { openMemoryCore } from '@dreamaniax/dsh-memory-core'
 
 const core = await openMemoryCore({ path: '/tmp/memory.sqlite3' })
 const memory = await core.createMemory({
@@ -277,7 +296,7 @@ tarball 门禁会先用 `npm cache add zod@4.6.6` 预热测试 cache，再以 `-
 7. createMemory 默认 candidate；update 不改 status，状态只走 feedback/delete/purge。
 8. deleteMemory 只软删除；purgeMemory 独立特权 token；purge 级联 versions/feedback，备份可能保留已删内容。
 9. namespace 只是隔离，不是认证。
-10. 包名 dsh-memory-core + `./plugin` 入口；不修改现有插件。
+10. 包名 `@dreamaniax/dsh-memory-core` + `./plugin` 入口；不修改现有插件。
 
 完整审批清单见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 第 10 节。
 
@@ -293,4 +312,4 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 运行时依赖 zod@4.6.6 为 MIT；包内不包含 TypeScript（Apache-2.0，仅构建期开发依赖，不随 tarball 分发）。package-lock 中记录的 @deepseek-ai/cordis 4.1.0、@deepseek-ai/cosmokit 1.9.0、@deepseek-ai/schemastery 3.19.0、@standard-schema/spec 1.1.0 与 undici-types 7.24.6 均为 MIT。未发现与 MIT 分发冲突的依赖许可；未来新增依赖时发布前重新审计。
 
-包目前仍是 `private: true` 且未发布 npm；License 声明不代表已公开发布。
+npm 包 `@dreamaniax/dsh-memory-core@0.1.0` 采用 MIT License；GitHub 仓库与 npm 包均已公开发布。

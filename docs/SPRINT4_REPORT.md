@@ -1,9 +1,9 @@
 # Sprint 4 实施报告 — DSH 集成与发布准备
 
 - 日期：2026-11-15
-- 状态：实现与隔离挂载验证完成；公开发布未完成
+- 状态：实现与隔离挂载验证完成；v0.1.0 已公开发布
 - 范围：Cordis `memoryCore` Service、`./plugin` 入口、隔离 DSH_HOME 真实挂载、两个消费者示例、安装/配置/备份/安全文档、npm pack 内容审计
-- 不在范围（Sprint 4 当时）：npm publish、许可证选择、Windows 实机验证、真实 DSH profile 安装、tarball 安装门禁、Git 历史重写；其中 tarball 安装门禁与文件模式已在发布收口补齐，见 docs/RELEASE_READINESS.md
+- 不在范围（Sprint 4 当时）：npm publish、许可证选择、Windows 实机验证、真实 DSH profile 安装、tarball 安装门禁、Git 历史重写；其中 tarball 安装门禁与文件模式已在发布收口补齐，许可证与公开发布已在 v0.1.0 release 完成，见 docs/RELEASE_READINESS.md
 - 基线：Sprint 3 的 43 项测试；Sprint 4 后 47 项测试
 
 ## 1. 本轮交付
@@ -22,13 +22,13 @@
   - `resolveDshHome(env)`：显式 `DSH_HOME` 优先，否则 `~/.dsh`。
   - `resolveMemoryCorePath(configuredPath, env)`：显式 `path` 优先，否则 `$DSH_HOME/memory-core/memory.sqlite3`。
 - 插件配置键：`path`、`journalMode`（wal/delete/truncate/persist）、`busyTimeoutMs`（0..60000）、`synchronous`（NORMAL/FULL）、`backupBeforeMigrate`、`backupDir`；默认路径与默认值见 README 与 API_REFERENCE 3.12。
-- `cordis.patch.yml`：插入 id `dsh-memory-core`、name `dsh-memory-core/plugin`。
+- `cordis.patch.yml`：插入 id `dsh-memory-core`、name `@dreamaniax/dsh-memory-core/plugin`。
 - `package.json`
   - 新增 `exports['./plugin']`（types + default）。
   - `files` 包含 `cordis.patch.yml` 与 `examples`。
   - `peerDependencies`：`@deepseek-ai/cordis ~4.1.0`、`@deepseek-ai/schemastery ~3.19.0`。
   - `dsh.engines.dsh >=0.2.2-rc.1`、`dsh.bundle.patch ./cordis.patch.yml`。
-  - `private: true`，未发布 npm。
+  - 发布时移除 `private`，作为 `@dreamaniax/dsh-memory-core@0.1.0` 公开到 npm。
 - `types/cordis.d.ts`、`types/schemastery.d.ts`：本地最小 peer 类型，仅用于编译；不打进发布包。
 
 ### 1.2 隔离 DSH_HOME 真实挂载
@@ -36,7 +36,7 @@
 测试夹具与脚本：
 
 - `tests/integration/dsh-boot-verify.sh`：创建临时 DSH_HOME，调用 DSH CLI 生成 web profile，准备包与 probe，启动 `dsh web`，检查证据，清理进程与临时目录。
-- `tests/integration/dsh-boot-prepare.mjs`：默认把 `package.json`、`cordis.patch.yml`、`lib`、`migrations` 复制到 profile 的 `node_modules/dsh-memory-core`；也支持把真实 tarball 安装到 profile；复制 probe；把 bundle 加入 profile；写入 probe 的 `cordis.patch.yml`。
+- `tests/integration/dsh-boot-prepare.mjs`：默认把 `package.json`、`cordis.patch.yml`、`lib`、`migrations` 复制到 profile 的 `node_modules/@dreamaniax/dsh-memory-core`；也支持把真实 tarball 安装到 profile；复制 probe；把 bundle 加入 profile；写入 probe 的 `cordis.patch.yml`。
 - `tests/fixtures/dsh-mount/probe/index.js`：真实 Cordis 插件，`inject: ['memoryCore']`，分 write/read 两阶段执行 create/get/search/feedback/health/close。
 - `tests/integration/check-dsh-evidence.mjs`：校验两阶段 JSON、同一 memoryId、health、关闭拒绝、默认 DB 路径、无 WAL/SHM 残留。
 - `tests/unit/plugin-config.test.mjs`（4 项）：DSH_HOME 优先、默认 `~/.dsh`、默认 DB 路径、显式 path 优先。
@@ -58,7 +58,7 @@ DSH mount verification passed
 
 验证内容：
 
-1. loader 接受 `dsh-memory-core/plugin` 子路径，未回退到其他入口。
+1. loader 接受 `@dreamaniax/dsh-memory-core/plugin` 子路径，未回退到其他入口。
 2. probe 通过 `ctx.memoryCore` 获得服务，完成 create、get、search、feedback、healthCheck。
 3. 写阶段关闭服务后再次读取返回失败，证明 close 生效。
 4. 重启 DSH 后 read 阶段读到同一 memoryId，证明默认路径持久化。
@@ -186,13 +186,13 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 
 ## 4. 未完成 / 发布门禁
 
-1. 许可证：MIT（短、宽松、无显式专利授权）或 Apache-2.0（更长、含显式专利授权）；未选择前不添加 LICENSE，不宣称 open source。
+1. 许可证：已选择 MIT；LICENSE、package.json、README 与 tarball 门禁均已更新。
 2. ~~tarball 安装门禁~~：已在发布收口完成；真实 tarball 安装到隔离 DSH_HOME 并通过挂载 probe。
 3. Windows 实机验证，或明确标注 unsupported/untested。
 4. Git 历史中的本地路径处理（接受/重写/新历史）；文件 mode 已在 f6a65be 规范化。
 5. 备份加密、保留策略与恢复演练。
 6. 并发写、多进程、真实长文本、云同步目录下的 WAL 行为。
-7. 若要发布 npm：移除 `private`，确认包名，跑 `npm publish --dry-run` 与最终发布审计；lockfile/`npm ci` 已在全新 clone + 新 cache 条件下验证，冷缓存首次仍需 registry。
+7. npm 发布已完成：scoped 名称 `@dreamaniax/dsh-memory-core`（unscoped 名称已被占用），`private` 已移除，`publishConfig.access=public`；lockfile/`npm ci` 已在全新 clone + 新 cache 条件下验证，冷缓存首次仍需 registry。
 8. v0.2 候选：归档/降权阈值、跨 namespace 关系、createMemory 幂等、cursor 分页、向量检索、自动 consolidation。
 
 ## 5. 验收结论
@@ -201,5 +201,5 @@ npm_config_cache="$PWD/.tmp/npm-cache" npm pack --dry-run --json
 - create/read/search/feedback、关闭清理、重启持久化均通过真实 DSH 进程验证。
 - 两个消费者示例独立通过自测，证明公共 API 可被外部插件复用。
 - 47/47 测试通过；整体行/分支/函数覆盖率 95.80%/85.07%/94.72%。
-- npm pack dry-run 内容干净；包仍 private，未发布。
-- 公开发布仍被许可证、Windows 验证、历史路径处理与备份策略阻塞；tarball 门禁、依赖缓存预热与文件模式已完成。
+- npm pack dry-run 内容干净；v0.1.0 已作为 `@dreamaniax/dsh-memory-core` 公开发布。
+- 公开发布门禁已完成：MIT、历史路径决策、tarball 门禁与依赖缓存预热已收口；Windows/Linux 仍未验证，备份仍为 v0.1 默认策略。

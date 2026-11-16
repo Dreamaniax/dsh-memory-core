@@ -303,7 +303,7 @@ npm pack --dry-run
 7. createMemory 默认 candidate；update 不改 status，状态只走 feedback/delete/purge。
 8. purge 级联 feedback/versions、清理孤儿 source、备份可能保留已删内容。
 9. namespace 只是隔离，不是认证。
-10. 包名/入口：dsh-memory-core + ./plugin；不修改现有插件，示例独立。
+10. 包名/入口：@dreamaniax/dsh-memory-core + ./plugin；不修改现有插件，示例独立。
 11. 测试目标：node:test 全量通过；核心覆盖 >=85%；10k 基准报告。
 12. 迁移失败 fail-closed、迁移前备份、保留 3 份、不自动重建。
 13. 运行时依赖：仅 zod ^4.6.6（宿主已安装 4.6.6，用于输入校验）；开发依赖仅 typescript 5.9.3 与 @types/node 24.x；node:sqlite 为内置，无原生模块。

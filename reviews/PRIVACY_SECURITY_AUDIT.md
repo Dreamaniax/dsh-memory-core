@@ -3,8 +3,9 @@
 - 审计日期：2026-11-16
 - 审计对象：commit `692785481632f3a75e5029bb625d1d2076ef1c0f`（tree `d7fa483def91f170211fde6dce125c521115ed7b`，parent `f96d8bfbd56af9a3eef21b5173a4a7a349f8c7e6`）
 - 审计范围：当前 tracked 树、全部可达 commit/分支/tag、commit 元数据、未跟踪/忽略文件、干净归档 tarball、公共 API 和数据边界
-- 仓库状态：GitHub private；package.json `private: true`；未切换可见性、未创建公开 Release/tag、未 npm publish
+- 仓库状态（审计时）：GitHub private；package.json `private: true`；未切换可见性、未创建公开 Release/tag、未 npm publish
 - 结论：**可继续作为私有发布候选；修复本次发现后，没有发现阻止公开源码的当前树秘密或凭据泄露。公开发布仍需用户明确决定；本次审计不等于批准切换可见性。**
+- 发布后记（2026-11-16）：用户随后明确授权公开发布；当前仓库/npm 状态与发布证据见 docs/RELEASE_READINESS.md。本报告保留审计时口径。
 
 ## 1. 方法与证据来源
 
