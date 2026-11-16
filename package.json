@@ -1,7 +1,8 @@
 {
   "name": "@dreamaniax/dsh-memory-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
+  "icon": "assets/icon.png",
   "license": "MIT",
   "type": "module",
   "description": "Reusable local-first long-term memory infrastructure for DSH plugins (SQLite + FTS5).",
@@ -40,6 +41,7 @@
   },
   "files": [
     "LICENSE",
+    "assets",
     "lib",
     "migrations",
     "docs",

@@ -61,6 +61,7 @@ for (const required of [
   'package/examples/weekly-retro/ingest.mjs',
   'package/examples/prompt-optimizer/ingest.mjs',
   'package/README.md',
+  'package/assets/icon.png',
 ]) {
   if (!entryNames.has(required)) failures.push('missing required file: ' + required)
 }
@@ -75,6 +76,18 @@ if (manifest.license !== 'MIT') failures.push('package.json license is not MIT')
 if (manifest.exports?.['./plugin']?.default !== './lib/plugin.js') failures.push('missing ./plugin export')
 if (manifest.dsh?.bundle?.patch !== './cordis.patch.yml') failures.push('missing dsh.bundle.patch')
 if (manifest.dependencies?.zod !== '4.6.6') failures.push('unexpected or missing zod dependency')
+if (manifest.icon !== 'assets/icon.png') failures.push('unexpected or missing package icon: ' + String(manifest.icon))
+if (!manifest.files?.includes('assets')) failures.push('package files does not include assets')
+
+let iconBytes = 0
+const iconPath = join(packageRoot, 'assets/icon.png')
+if (!existsSync(iconPath)) {
+  failures.push('missing packaged icon: assets/icon.png')
+} else {
+  iconBytes = statSync(iconPath).size
+  if (iconBytes > 256 * 1024) failures.push('icon exceeds 256 KiB: ' + iconBytes)
+  if (readFileSync(iconPath).subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') failures.push('icon is not a PNG')
+}
 
 const contentChecks = [
   ['local user path', /\/Users\/|\/home\/|OneDrive/],
@@ -84,6 +97,7 @@ const contentChecks = [
 ]
 for (const entry of entries) {
   if (!entry.mode.startsWith('-')) continue
+  if (/\.(png|jpe?g|webp|gif|ico|woff2?|ttf|otf|pdf|zip|gz|tgz|sqlite3?|db)$/i.test(entry.name)) continue
   const path = join(unpackDir, entry.name)
   if (!existsSync(path)) continue
   const text = readFileSync(path, 'utf8')
@@ -107,7 +121,8 @@ console.log(JSON.stringify({
   packageName: manifest.name,
   packageVersion: manifest.version,
   private: manifest.private,
-  requiredFiles: 9,
+  requiredFiles: 10,
+  iconBytes,
   modes: 'all files 0644, directories 0755',
   forbiddenPaths: 0,
   contentFindings: 0,

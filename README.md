@@ -2,9 +2,9 @@
 
 Reusable, local-first long-term memory infrastructure for the DSH plugin ecosystem.
 
-> 状态：v0.1.0 公开发布。Sprint 1–4 与发布收口已完成，50 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；npm 包为 `@dreamaniax/dsh-memory-core`，GitHub 仓库公开；Windows 未验证，不宣称支持。
+> 状态：v0.1.1 发布候选。Sprint 1–4 与发布收口已完成，51 项自动化测试通过，核心服务行/函数覆盖率 >=85%；干净 tarball 安装到隔离 DSH_HOME 后再次通过 create/read/search/feedback/重启持久化验证；验证过程未写入真实 DSH profile；**MIT License**；npm 包为 `@dreamaniax/dsh-memory-core`，GitHub 仓库公开；Windows 未验证，不宣称支持。
 >
-> 链接：[GitHub](https://github.com/Dreamaniax/dsh-memory-core) · [npm](https://www.npmjs.com/package/@dreamaniax/dsh-memory-core) · [v0.1.0 Release](https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.0)
+> 链接：[GitHub](https://github.com/Dreamaniax/dsh-memory-core) · [npm](https://www.npmjs.com/package/@dreamaniax/dsh-memory-core) · [v0.1.1 Release](https://github.com/Dreamaniax/dsh-memory-core/releases/tag/v0.1.1)
 >
 > 当前能力：SQLite Store、迁移、备份、健康检查、namespace-scoped CRUD/版本/软删除/purge、来源追踪、FTS5/LIKE 关键词搜索、confirm/correct/reject/flag 反馈、Cordis `memoryCore` Service、Library 入口。
 
@@ -65,7 +65,9 @@ $DSH_HOME/memory-core/memory.sqlite3
 
 ## 安装到 DSH
 
-v0.1.0 是公开包 `@dreamaniax/dsh-memory-core`。包必须能被目标 DSH profile 解析到；推荐作为 profile 的 bundle 依赖，不要复制进业务项目目录。验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
+v0.1.1 发布后是公开包 `@dreamaniax/dsh-memory-core`。包必须能被目标 DSH profile 解析到；推荐作为 profile 的 bundle 依赖，不要复制进业务项目目录。验证环境为 DSH Desktop 0.2.2-rc.3 / Cordis 4.1.0。
+
+插件图标由 `package.json` 的 `icon` 字段声明为 `assets/icon.png`（512×512 透明 PNG，<256 KiB），DSH 插件管理器直接读取该文件，不需要执行插件代码。
 
 ### 从 npm registry 安装
 
@@ -73,7 +75,7 @@ v0.1.0 是公开包 `@dreamaniax/dsh-memory-core`。包必须能被目标 DSH pr
 
 ~~~bash
 # 例：PROFILE="$DSH_HOME/profiles/web"
-npm install @dreamaniax/dsh-memory-core@0.1.0 --prefix "$PROFILE" \
+npm install @dreamaniax/dsh-memory-core@0.1.1 --prefix "$PROFILE" \
   --legacy-peer-deps --ignore-scripts --no-audit --no-fund
 ~~~
 
@@ -82,7 +84,7 @@ npm install @dreamaniax/dsh-memory-core@0.1.0 --prefix "$PROFILE" \
 ~~~json
 {
   "dependencies": {
-    "@dreamaniax/dsh-memory-core": "0.1.0"
+    "@dreamaniax/dsh-memory-core": "0.1.1"
   },
   "dsh": {
     "profile": {
@@ -314,4 +316,4 @@ v0.1 的边界与 v0.2 backlog 见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 
 运行时依赖 zod@4.6.6 为 MIT；包内不包含 TypeScript（Apache-2.0，仅构建期开发依赖，不随 tarball 分发）。package-lock 中记录的 @deepseek-ai/cordis 4.1.0、@deepseek-ai/cosmokit 1.9.0、@deepseek-ai/schemastery 3.19.0、@standard-schema/spec 1.1.0 与 undici-types 7.24.6 均为 MIT。未发现与 MIT 分发冲突的依赖许可；未来新增依赖时发布前重新审计。
 
-npm 包 `@dreamaniax/dsh-memory-core@0.1.0` 采用 MIT License；GitHub 仓库与 npm 包均已公开发布。
+npm 包 `@dreamaniax/dsh-memory-core@0.1.1` 采用 MIT License；GitHub 仓库与 npm 包均已公开发布。
