@@ -20,9 +20,16 @@ Last updated: 2026-11-16 for the v0.1.0 release candidate.
 - [x] `npm run typecheck` exit 0; `npm run build` exit 0; `npm test` 47/47 pass, 0 fail;
       coverage 95.80% lines / 85.07% branches / 94.72% functions; `npm run test:examples`
       exit 0.
-- [x] `npm pack --dry-run` precheck: 140 files, LICENSE present, license MIT, private true,
-      134,354 bytes packed (final gate output governs).
-- [ ] Isolated DSH mount and real tarball gate on the committed candidate.
+- [x] `npm pack --dry-run` precheck: 140 files, LICENSE present, license MIT, private true.
+- [x] Isolated DSH mount on the candidate code commit: exit 0, memoryId
+      889d83ce-17ba-4768-b941-1107f76f30cb, restart persistence and clean close passed.
+- [x] Real tarball gate on the candidate code commit: exit 0, 135,294 bytes, 140 files, requiredFiles 9,
+      all 0644, forbiddenPaths 0, contentFindings 0; tarball-installed mount passed with
+      memoryId 4eacf925-3b5d-4b82-8f58-b59e8134f6d5. The first candidate attempt failed at
+      `npm cache add zod@4.4.3` (registry timeout); retry after cache warm passed.
+- [x] Clean clone at the candidate code commit: npm ci, typecheck, test (47/47), coverage, examples, test:dsh
+      (memoryId 5253ff24-9230-4f26-aea0-1e0fbfe5179b), and test:tarball (memoryId
+      8f7108a9-db51-43f6-a6fb-3caac5db8ce1) all exit 0; clone worktree clean.
 
 ## Verified baseline (2026-11-15, v0.1.0)
 

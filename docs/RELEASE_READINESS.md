@@ -9,17 +9,17 @@
 
 | 门禁 | 状态 | 证据 |
 | --- | --- | --- |
-| 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；新增 tarball gate 后当前 HEAD 为 79×100644 + 2×100755（两个直接执行的验证脚本） |
+| 文件模式规范化 | 通过 | commit f6a65be 规范为 77×100644 + 1×100755；加入 LICENSE 后候选 HEAD 为 80×100644 + 2×100755（两个直接执行的验证脚本） |
 | 干净依赖安装 | 通过（全新 cache + registry） | 全新临时 clone 执行 npm ci，exit 0 |
 | typecheck / build | 通过 | npm run typecheck；npm run build，均 exit 0 |
 | 全量测试 | 通过 | 47 / 47，0 fail |
 | 覆盖率 | 通过 | 行 95.80% / 分支 85.07% / 函数 94.72%（最近一次全量运行） |
 | 许可证 | 通过（选定 MIT） | LICENSE + package.json `license: MIT` + README；依赖许可无冲突（见 §5） |
 | 两个消费者示例 | 通过 | weekly-retro、prompt-optimizer 的 --selftest 均 exit 0 |
-| 隔离 DSH_HOME 挂载 | 通过 | ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭 |
-| 真实 tarball 安装 + 挂载 | 通过 | 干净 tarball 安装到临时 profile，再运行同一挂载 probe；commit 542182d 上 memoryId 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
+| 隔离 DSH_HOME 挂载 | 通过 | 候选代码提交上 ctx.memoryCore create/get/search/feedback/close、重启持久化、干净关闭；memoryId 889d83ce-17ba-4768-b941-1107f76f30cb |
+| 真实 tarball 安装 + 挂载 | 通过 | 候选代码提交：135,294 bytes、140 files、memoryId 4eacf925-3b5d-4b82-8f58-b59e8134f6d5；基线 commit 542182d 上为 4655d9fc-86ae-4d9f-b09a-c8d06a9d8411 |
 | tarball 依赖缓存 | 通过 | 冷缓存先用 npm cache add 缓存 zod packument + tarball，再以 --offline 安装；未手工复制依赖 |
-| tarball 内容审计 | 通过 | 139 个文件全部 0644；无数据库/测试/缓存/密钥/个人路径 |
+| tarball 内容审计 | 通过 | 140 个文件全部 0644；含 LICENSE；无数据库/测试/缓存/密钥/个人路径 |
 | Git 当前树审计 | 通过 | 当前 tracked 文件无密钥、真实记忆、个人绝对路径 |
 | Git 历史审计 | 通过（接受保留） | 全部 commit 无密钥/二进制/数据库；早期 commit 保留两条本机绝对路径，决定不重写 |
 | Windows | 未验证 | 仅在 macOS arm64 上实测；本版本不宣称支持 Windows |
@@ -73,6 +73,14 @@ feedbackTotal 1。packed size 会随文档内容变化，最终以 gate 输出�
 
 DSH 宿主可能自行更新 desktop profile 的 pnpm 元数据，这不属于本仓库测试写入。
 
+本次候选复跑结果：
+
+- 本地工作树：`npm run typecheck` exit 0；`npm run build` exit 0；`npm test` 47/47 pass、0 fail、213.500792 ms；`npm run test:coverage` 行 95.80% / 分支 85.07% / 函数 94.72%；`npm run test:examples` exit 0（weekly-retro、prompt-optimizer 均通过）。
+- `npm run test:dsh` exit 0：隔离 DSH_HOME 挂载通过，memoryId 889d83ce-17ba-4768-b941-1107f76f30cb。
+- `npm run test:tarball` exit 0：135,294 bytes、140 entries、140 files、requiredFiles 9、全部 0644、forbiddenPaths 0、contentFindings 0；隔离挂载 memoryId 4eacf925-3b5d-4b82-8f58-b59e8134f6d5。
+- 首次候选 tarball 尝试在 `npm cache add zod@4.4.3` 处失败（registry 超时）；缓存预热后复跑通过。冷缓存首次仍需要 registry 一次，不能写成完全离线通过。
+- 干净 clone（候选代码提交，非工作树）：`npm ci` exit 0；`npm run typecheck` exit 0；`npm test` 47/47 pass、0 fail、206.882042 ms；coverage 95.80% / 85.07% / 94.72%；`npm run test:examples` exit 0；`npm run test:dsh` exit 0（memoryId 5253ff24-9230-4f26-aea0-1e0fbfe5179b）；`npm run test:tarball` exit 0（memoryId 8f7108a9-db51-43f6-a6fb-3caac5db8ce1）；clone 工作区 clean。
+
 可重复命令：
 
 ~~~bash
@@ -91,7 +99,7 @@ zod 缓存并以 `--offline` 安装 profile；它不会把工作区或 node_modu
 | --- | ---: |
 | 条目数 | 140（候选包预检；含 LICENSE，最终以 gate 输出为准） |
 | 文件数 | 140（候选包预检） |
-| packed size | 候选包预检 134,354 bytes（文档定稿前）；最终以实际 gate 输出为准 |
+| packed size | 候选代码提交的 gate：135,294 bytes；文档进一步更新会改变 packed size，最终以实际 gate 输出为准 |
 | unpacked size | 约 490 KB |
 | 所有文件模式 | 0644 |
 | 可执行文件 | 0 |
@@ -178,16 +186,21 @@ npm 通常会自动包含 LICENSE，但本包已在 `files` 显式列出，并�
 - 未执行 npm publish、GitHub 公开切换、Windows CI、并发写/多进程压力测试。
 - 中文 2 字查询走 LIKE，O(n)；无分词器/向量检索。
 
-## 7. 公开发布步骤（建议顺序）
+## 7. 公开发布步骤与状态
 
-1. 决定许可证并添加 LICENSE/package.json/README 变更。
-2. 决定历史路径处理方案；若重写，先备份并通知所有克隆。
-3. 在普通 checkout 确认文件模式（100644，脚本 100755），不要依赖云同步工作副本。
-4. 选择 Windows 支持策略：补 CI/实机验证，或明确标注 unsupported/untested。
-5. 决定备份加密、保留周期和恢复演练 owner。
-6. 跑完整门禁：typecheck、test、coverage、examples、test:dsh、test:tarball、pack 审计。
-   `test:tarball` 的冷缓存首次需要 registry；若要在 CI 完全离线运行，先预热 zod cache。
+已完成（本候选，用户已确认）：
+
+1. 许可证：MIT；LICENSE、package.json、README 和 tarball 门禁均已更新。
+2. 历史路径：接受并保留两条本机开发路径；不重写、不 force-push。
+3. 平台策略：macOS arm64 已实测；Windows/Linux 标记为未验证，不宣称支持。
+4. 备份策略：记录自动迁移备份保留最近 3 份、不加密、不异地；风险、用户保护和恢复步骤写入 README。
+5. 门禁：typecheck、build、test、coverage、examples、隔离 DSH 挂载、真实 tarball 安装与挂载均已复跑；结果见 §2。
+
+仍需用户明确授权/执行的公开发布步骤：
+
+6. 在普通 checkout 确认文件模式（100644，脚本 100755），不要依赖云同步工作副本。
 7. 仓库转 public 前再次扫描 secrets/历史/许可证；转 public 后再做 GitHub release/tag。
-8. 若要 npm 发布：移除 private、确认包名可用、npm publish --dry-run、再正式 publish。
+8. 若要 npm 发布：移除 `private`、确认包名可用、`npm publish --dry-run`、检查最终 tarball，再正式 publish。
+9. `test:tarball` 的冷缓存首次需要 registry；若要在 CI 完全离线运行，先预热 zod cache。
 
-在以上 1–5 未完成前，当前结论是：**私有候选包可审计、可安装、可挂载；不是公开可发布版本。**
+当前结论：**私有候选包可审计、可安装、可挂载、具备 MIT 许可文件；但它仍不是公开可发布版本**，因为尚未执行公开可见性切换、公开 Release、npm publish，且 Windows/Linux 未验证。
